@@ -1,0 +1,227 @@
+---
+title: "STATS 415 Homework 1"
+author: "Jiacheng Xie"
+date: "2022/1/22"
+output:
+  pdf_document: default
+---
+
+## II. ISLR chapter 2 conceptual exercises 1, 2, 3, 4, 7
+
+1.
+
+(a) A **flexible model** will perform better. When the sample size is very large, flexible model reduce the bias of the model and is less likely to overfit the data. 
+
+(b) An **inflexible model** will perform better. When the sample size is small, flexible model is more likely to overfit the data.
+
+(c) A **flexible model** will perform better. When the relationship between the predictors and response is highly non-linear, flexible model has more degree of freedom to predict the non-linear relationship. 
+
+(d) An **inflexible model** will perform better. When the variance of the error terms is high, inflexible model can avoid fitting the error terms.
+
+2.
+
+(a) **Regression**. The response CEO salary for this problem is quantitative.
+
+    **Inference**. The problem doesn't aim to make prediction for CEO salary. Instead, we are interested in how these predictors are associated with CEO salary and what is the relationship between the CEO salary and each predictor.
+    
+    n = 500
+    
+    p = 3 {profit, number of employees, industry}
+
+(b) **Classification**. The response success or failure for this problem is qualitative (binary).
+
+    **Prediction**. The problem aims to create a function model based on existing data that allows predictor input from a new sample data to output a prediction whether a new product will be a success or a failure. 
+    
+    n = 20
+    
+    p = 13 {price charged for the product, marketing budget, competition price, and ten other variables}
+
+(c) **Regression**. The response % change in USD/Euro exchange rate for this problem is quantitative. 
+
+    **Prediction**. The problem aim to create a function model based on existing data that allows predictor input from a new sample data to output a prediction of % change in USD/Euro given the % change in 3 other world stock markets.
+    
+    n = 52 
+    
+    p = 3 {the % change in the US market, the % change in the British market, and the % change in the German market}
+
+3.
+
+(a)
+![](hw1_graph.jpg)
+
+(b) **Bias**: Typically, Bias decreases continuously as flexibility increases. Bias is defined as the difference between the expectation of f hat and value of original data set. When we include more degree of freedom in the model, the model will fit the data more closely, decreases that difference.
+
+    **Variance**: Typically, variance increases continuously as flexibility increases. When we include more degree of freedom in the model, we fit the data too closely, so new data from test dataset is more likely to deviate from the fitted model, which causes variance to increase. 
+
+    **Training Error**: Typically, training error decreases continously as flexibility increases. When the flexibility is small, there isn't much difference between training error and test error. However, as the flexibility grows, the training error decreases, and it reaches a really small value when the flexibility is large enough. 
+
+    **Test Error**: Typically, test error shows a U shape - decreases first and increase after a certain point. The test error curve is higher than bias, variance, and irreducible error since test error equals their sum. According to bias-variance trade off, our goal is to find the flexibility when the test error reaches its minimum. 
+
+    **Irreducible Error**: Typically, irreducible error is a constant number less than test error, because irreducible error is the ideal minimum error of the fitted model. 
+
+4.
+
+(a) **Detecting spam emails**. Classify whether a email is a spam or not. The responses are "Yes" or "No" given a set of predictors such as email sender, documents attached, key words in email. We focus on prediction.
+
+    **Face Recognition**. Classify whether it is the phone owner to unlock it. The responses are "Yes" or "No" given a set of predictors such as eyes, noses, ears, hairs, and mouth. We focus on prediction. 
+    
+    **Product categorization**. Classify what kind of product is should be in the supermarket. The responses are "Foods", "Daily Necessities", "Electronics" give a set of predictors such as mass, shape, volumes, description on package. We focus on prediction. 
+
+(b) **Predicting Height**. Predict heights throughout one's adolescence by fitting a regression model. The response is the height given the predictor is the age. We focus on prediction. 
+
+    **Predicting Sales**. Predict sales of a company by fitting a regression model. The response is the sales given the predictor is the advertising spending, cost of products, etc.. We focus on prediction. 
+    
+    **Housing Price**. Predict housing price based on sample data by fitting a multiple regression model. The response is the housing price given a set of predictors such as location, house features, nearby environment, average income. We focus on prediction. 
+
+(c) **Social network analysis**. We can let all individuals to sets of data and put them into a plot to recognize communities within large group of people.
+
+    **Outlier Detection**. If we find one data is too far from the majority of the data set, we can label it as the outlier. 
+    
+    **Market Research**. Cluster analysis can be used to identify different groups of buyers and allows companies to set different marketing strategies according to different group of people. 
+
+7.
+
+(a)
+
+```{r}
+
+distf <- function(a, b, c) {
+  sqrt((a - 0)^2 + (b - 0)^2 + (c - 0)^2)
+}
+
+distf(0, 3, 0)
+distf(2, 0, 0)
+distf(0, 1, 3)
+distf(0, 1, 2)
+distf(-1, 0, 1)
+distf(1, 1, 1)
+```
+
+(b) **Green**. When K = 1, our prediction is based on the nearest 1 neighbor: observation 5, which is green. 
+
+(c) **Red**. When K = 3, our prediction is based on the nearest 3 neighbors: observation 2, 5, 6. Two of 3 neighbors are red, so we conclude test point is red. 
+
+(d) We expect the best value for K to be small. When the Bayes decision boundary is highly non-linear, a flexible model will perform better to estimate the boundary. We use 1/K to measure the flexibility, so smaller value of K gives us more flexible model. 
+
+
+## III. Classmates in STATS 415
+
+(a) Categorical: Major
+
+    Ordinal: Student Standing (Freshman, Sophomore, Junior, Senior)
+    
+    Continuous: GPA
+    
+(b) Categorical: We could make inference on students major of STATS 413 based on sample data. 
+
+    Ordinal: We could make inference on student standing of an upper level statistics course based on sample data.
+    
+    Continuous: We could make inference on GPA distribution of statistics & data science students at umich based on sample data.
+
+(c) Categorical: We could not make inference on students major of EECS 482 based on sample data. 
+
+    Ordinal: We could not make inference on student standing of an upper level history course based on sample data. 
+    
+    Continuous: We could not make inference on GPA distribution of sociology students at umich based on sample data.
+
+## IV. Inverse Document Matrix Transformation
+
+(a) The transformation intends to decrease the importance of more frequent words and increase the importance of less frequent words when fitting the model. This transformation is helpful when we want to find some specific topics through all relevant documents. 
+
+(b) Rare term: `Bootstrap`. If we are interested in searching for resampling methods in the document, although the term `bootstrap` doesn't appear frequently, that is what we need so we should put more importance. Common term: `the`. If we are interested in searching of resampling methods in the document, because the term `the` appears too frequently, it doesn't help for us to find anything related to resampling methods. 
+    
+    Suppose the 1st word in the 1st document is a rare term, and 2nd word in the 1st document is a common term. Suppose $f_{i1} = f_{i2}$, $n = 100$, $g_1 = 10$, $g_2 = 90$. For the 1st word (rare term) in the 1st document, $f_{11}^* = f_{11} = \ln \frac{n}{g_1}$. For the 2nd word (common term) in the 1st document, $f_{12}^* = f_{12} \ln \frac{n}{g_1}$. Since $g_1$ < $g_2$, then $\ln \frac{n}{g_1} >\ln \frac{n}{g_2}$. Since $f_{11} = f_{12}$ and $\ln \frac{n}{g_1} > \ln \frac{n}{g_2}$, we finally have $f_{11}^* > f_{12}^*$. 
+
+    From the example, we can find that the inverse document frequency transformation is incorporated which increases the weight of rare terms ($f_{11}^*$) and diminishes the weight of common terms ($f_{12}^*$) in the document. 
+
+## V. Explore the College data set
+
+First, we read the College data set.
+```{r}
+College <- read.csv("college.csv")
+head(College)
+```
+
+(1) Some numerical summaries for each variable
+```{r}
+summary(College)
+```
+
+There are total 777 colleges in the data set. The number of applications vary from 81 to 48094, but the number of enrollment only vary from 35 to 6392, which indicates that the acceptance rates of different schools varies a lot. Most of the colleges have relatively high student/faculty ratios, but there is an extremely low student/faculty ratio of 2.5. All of the variables show that colleges are quite different from each other. 
+
+(2) Some multivariate numerical summaries
+```{r}
+cor(College$Accept, College$Enroll)
+cov(College$Top10perc, College$PhD)
+cor(College$Room.Board, College$Expend)
+cov(College$F.Undergrad, College$P.Undergrad)
+```
+The correlation between acceptance and enrollment is really high, which shows that students who have committed to one college would likely to enroll in that college. The correlation between room board and expend is about 0.5 which shows that there is somewhat relationship between these two variables but may not be significant.
+
+The covariance between top 10% student and PhD student is not high, which shows that colleges having top students are more likely to have more PhD students and vice versa. The covariance between full-time undergrads and part-time undergrads is extremely high so we conclude that there is no strong correlation between the number of full-time undergrads and the number of part-time undergrads. 
+
+(3) Some graphical summaries for each variable.
+```{r}
+par(mfrow = c(2, 2))
+hist(College$Apps, main = "Histogram of Application", 
+     xlab = "# of Applications")
+boxplot(College$Accept, main = "Boxplot of Acceptance", 
+        ylab = "# of Acceptances")
+hist(College$Enroll, main = "Histogram of Enrollment", 
+     xlab = "# of Enrollments")
+boxplot(College$Top10perc, main = "Boxplot of Top 10% student", 
+        ylab = "% of Top 10% students")
+hist(College$Top25perc, main = "Histogram of Top 25% student", 
+     xlab = "% of Top 25% students")
+boxplot(College$F.Undergrad, main = "Boxplot of Full-time Undergrad",
+        ylab = "# of Full-time Undergrads")
+hist(College$P.Undergrad, main = "Histogram of Part-time Undergrad",
+     xlab = "# of Part-time Undergrads")
+boxplot(College$Outstate, main = "Boxplot of Out-state tuition", 
+        ylab = "Out-state tuition")
+hist(College$Room.Board, main = "Histogram of Room Board cost", 
+     xlab = "Room Board costs")
+boxplot(College$Books, main = "Boxplot of Book cost", 
+        ylab = "Book costs")
+hist(College$Personal, main = "Histogram of Personal spending", 
+     xlab = "Personal Spending")
+boxplot(College$PhD, main = "Boxplot of PhD faculty", 
+        ylab = "% of Faculties with PhD")
+hist(College$Terminal, main = "Histogram of Terminal degree faculty",
+     xlab = "% of faculty with terminal degree")
+boxplot(College$S.F.Ratio, main = "Boxplot of Student/Faculty Ratio",
+        ylab = "Student/Faculty Ratio")
+hist(College$perc.alumni, main = "Histogram of Alumni who Donate",
+     xlab = "Percentage of Alumni who Donate")
+boxplot(College$Expend, main = "Boxplot of Expend per student",
+        ylab = "Expend per student")
+hist(College$Grad.Rate, main = "Histogram of Graduation Rate", 
+     xlab = "Graduation Rate")
+```
+
+Since there are too many variables, I will just pick up some of them to discuss.
+
+**Applications** Most number of applications lies in 0 to 5000. We could say that the distribution of number of applications skew to the right. However, there are a few schools having large numbers of applications, which makes the variance too high to be well-analyzed. I recommend considering some extreme values as outliers that benefits later data analysis. 
+
+**Top 10% student** On average (more accurately, on median) each college has around 25% of students who are top 10% in high school. University level coursework is undoubtedly harder than high school coursework, so it is reasonable to have many top students enrolling in the universities. 
+
+**Room Board Fee** The distribution of room board fee looks similar to normal distribution but skew a little to the right. The data proves that normal distribution is an effective way to predict and analyze data. 
+
+(4) Some multivariate graphical summaries.
+```{r}
+plot(Room.Board ~ Personal, data = College)
+
+# pairwise scatter plots
+pairs( ~ F.Undergrad + P.Undergrad + PhD + perc.alumni, data = College)
+
+# side-by-side boxplots
+par(mfrow = c(1, 2))
+boxplot(S.F.Ratio ~ Private, data = College)
+boxplot(perc.alumni ~ Private, data = College)
+```
+
+According to the first graph which discusses the relationship between `Room.Board` and `Personal`, we can see that room board costs varies from about 2000 to 7000, but most personal expenses are around 500 to 2000 except for some extreme values. There is no linear relationship between these two variables.
+
+According to the second graph which discusses the relationship between `F.Undergrad`, `P.Undergrad`, `PhD`, and `perc.alunmi`, the correlations between each two of them are not clear. The data in each plot is skewed to one side. I cannot conclude any linear or non-linear relationship based on the data given. 
+
+According to the side-by-side boxplots, which discuss the relationships between `S.F.Ratio` and `Private` and between `perc.alumni` and `Private`, there is evidence to conclude that private colleges have lower student/faculty ratios and higher percents of alumni who donate than public colleges. 

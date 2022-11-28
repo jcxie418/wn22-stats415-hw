@@ -1,0 +1,343 @@
+---
+title: "STATS 415 Homework 9"
+author: "Jiacheng Xie"
+date: '2022-03-29'
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+## III. SVM, Hyperplane, and Slack Variable
+
+![](hw9_graph2.jpg)
+
+## II. ISLR Chapter 9 Exercise 2, 3
+
+![](hw9_graph1.jpg)
+
+## IV. Crabs Dataset
+
+```{r}
+library(MASS)
+
+set.seed(6789)
+
+crabs.BM <- which(crabs$sp == "B" & crabs$sex == "M")
+crabs.BF <- which(crabs$sp == "B" & crabs$sex == "F")
+crabs.OM <- which(crabs$sp == "O" & crabs$sex == "M")
+crabs.OF <- which(crabs$sp == "O" & crabs$sex == "F")
+
+train.id = c(sample(crabs.BM, size = trunc(0.80 * length(crabs.BM))),
+             sample(crabs.BF, size = trunc(0.80 * length(crabs.BF))),
+             sample(crabs.OM, size = trunc(0.80 * length(crabs.OM))),
+             sample(crabs.OF, size = trunc(0.80 * length(crabs.OF))))
+
+crabs.train <- crabs[train.id, ]
+crabs.test <- crabs[-train.id, ]
+```
+
+(a)
+```{r}
+library(e1071)
+
+set.seed(6789)
+svm.tuned.ln <- tune(svm, sp ~ FL + RW + CL + CW + BD, 
+                     data = crabs.train, kernel = "linear",
+                     ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+
+train.errs.ln <- c()
+test.errs.ln <- c()
+for (cost in c(0.001, 0.01, 0.1, 1, 5, 10, 100)) {
+  svm.fit.ln <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                    kernel = "linear", cost = cost)
+  
+  train.pred.ln <- predict(svm.fit.ln, crabs.train)
+  train.err.ln <- mean(crabs.train$sp != train.pred.ln)
+  train.errs.ln <- c(train.errs.ln, train.err.ln)
+  
+  test.pred.ln <- predict(svm.fit.ln, crabs.test)
+  test.err.ln <- mean(crabs.test$sp != test.pred.ln)
+  test.errs.ln <- c(test.errs.ln, test.err.ln)
+}
+
+plot(train.errs.ln ~ c(0.001, 0.01, 0.1, 1, 5, 10, 100), type = "o", 
+     main = "Linear SVM Training Errors", xlab = "cost", ylab = "Errors")
+plot(svm.tuned.ln$performances$error ~ c(0.001, 0.01, 0.1, 1, 5, 10, 100), 
+     type = "o", main = "Linear SVM Cross-Validation Errors", 
+     xlab = "cost", ylab = "Errors")
+plot(test.errs.ln ~ c(0.001, 0.01, 0.1, 1, 5, 10, 100), type = "o",
+     main = "Linear SVM Test Errors", xlab = "cost", ylab = "Errors")
+
+svm.fit.ln <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                  kernel = "linear", cost = 1)
+```
+All three types of error go to 0 when cost reaches 1. Therefore, the best value of parameter cost is 1. 
+
+Let's verify the result using `best.parameters` found by `svm.tuned.ln`.
+```{r}
+svm.tuned.ln$best.parameters
+```
+
+```{r}
+plot(svm.fit.ln, data = crabs.train, formula = FL ~ CL)
+plot(svm.fit.ln, data = crabs.train, formula = FL ~ RW)
+plot(svm.fit.ln, data = crabs.train, formula = FL ~ CW)
+```
+
+(b)
+
+**Radial Kernels**
+```{r}
+set.seed(6789)
+svm.tuned.rad <- tune(svm, sp ~ FL + RW + CL + CW + BD, 
+                      data = crabs.train, kernel = "radial",
+                      ranges = list(cost = c(0.01, 0.1, 1, 5, 10),
+                                    gamma = c(0.5, 1, 2, 3, 4)))
+
+# gamma = 0.5
+train.errs.rad..5 <- c()
+test.errs.rad..5 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.rad..5 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                        kernel = "radial", cost = cost, gamma = 0.5)
+  
+  train.pred.rad..5 <- predict(svm.fit.rad..5, crabs.train)
+  train.err.rad..5 <- mean(crabs.train$sp != train.pred.rad..5)
+  train.errs.rad..5 <- c(train.errs.rad..5, train.err.rad..5)
+  
+  test.pred.rad..5 <- predict(svm.fit.rad..5, crabs.test)
+  test.err.rad..5 <- mean(crabs.test$sp != test.pred.rad..5)
+  test.errs.rad..5 <- c(test.errs.rad..5, test.err.rad..5)
+}
+
+# gamma = 1
+train.errs.rad.1 <- c()
+test.errs.rad.1 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.rad.1 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                       kernel = "radial", cost = cost, gamma = 1)
+  
+  train.pred.rad.1 <- predict(svm.fit.rad.1, crabs.train)
+  train.err.rad.1 <- mean(crabs.train$sp != train.pred.rad.1)
+  train.errs.rad.1 <- c(train.errs.rad.1, train.err.rad.1)
+  
+  test.pred.rad.1 <- predict(svm.fit.rad.1, crabs.test)
+  test.err.rad.1 <- mean(crabs.test$sp != test.pred.rad.1)
+  test.errs.rad.1 <- c(test.errs.rad.1, test.err.rad.1)
+}
+
+# gamma = 2
+train.errs.rad.2 <- c()
+test.errs.rad.2 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.rad.2 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                       kernel = "radial", cost = cost, gamma = 2)
+  
+  train.pred.rad.2 <- predict(svm.fit.rad.2, crabs.train)
+  train.err.rad.2 <- mean(crabs.train$sp != train.pred.rad.2)
+  train.errs.rad.2 <- c(train.errs.rad.2, train.err.rad.2)
+  
+  test.pred.rad.2 <- predict(svm.fit.rad.2, crabs.test)
+  test.err.rad.2 <- mean(crabs.test$sp != test.pred.rad.2)
+  test.errs.rad.2 <- c(test.errs.rad.2, test.err.rad.2)
+}
+
+# gamma = 3
+train.errs.rad.3 <- c()
+test.errs.rad.3 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.rad.3 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                       kernel = "radial", cost = cost, gamma = 3)
+  
+  train.pred.rad.3 <- predict(svm.fit.rad.3, crabs.train)
+  train.err.rad.3 <- mean(crabs.train$sp != train.pred.rad.3)
+  train.errs.rad.3 <- c(train.errs.rad.3, train.err.rad.3)
+  
+  test.pred.rad.3 <- predict(svm.fit.rad.3, crabs.test)
+  test.err.rad.3 <- mean(crabs.test$sp != test.pred.rad.3)
+  test.errs.rad.3 <- c(test.errs.rad.3, test.err.rad.3)
+}
+
+# gamma = 4
+train.errs.rad.4 <- c()
+test.errs.rad.4 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.rad.4 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                       kernel = "radial", cost = cost, gamma = 4)
+  
+  train.pred.rad.4 <- predict(svm.fit.rad.4, crabs.train)
+  train.err.rad.4 <- mean(crabs.train$sp != train.pred.rad.4)
+  train.errs.rad.4 <- c(train.errs.rad.4, train.err.rad.4)
+  
+  test.pred.rad.4 <- predict(svm.fit.rad.4, crabs.test)
+  test.err.rad.4 <- mean(crabs.test$sp != test.pred.rad.4)
+  test.errs.rad.4 <- c(test.errs.rad.4, test.err.rad.4)
+}
+
+plot(train.errs.rad..5 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[1],
+     main = "Radial Kernel Training Errors", xlab = "cost", ylab = "Errors")
+lines(train.errs.rad.1 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[2])
+lines(train.errs.rad.2 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[3])
+lines(train.errs.rad.3 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[4])
+lines(train.errs.rad.4 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[5])
+legend("topright", horiz = T, legend = c(0.5, 1:4), col = rainbow(5), lty = 1,
+       cex = .75, title = "gamma")
+
+with(svm.tuned.rad$performances, {
+  plot(error[gamma == 0.5] ~ cost[gamma == 0.5], ylim = c(0, .7), type = "o",
+       col = rainbow(5)[1], main = "Radial Kernel Cross-validation Errors", 
+       xlab = "cost", ylab = "Error")
+  lines(error[gamma == 1] ~ cost[gamma == 1], type = "o", col = rainbow(5)[2])
+  lines(error[gamma == 2] ~ cost[gamma == 2], type = "o", col = rainbow(5)[3])
+  lines(error[gamma == 3] ~ cost[gamma == 3], type = "o", col = rainbow(5)[4])
+  lines(error[gamma == 4] ~ cost[gamma == 4], type = "o", col = rainbow(5)[5])
+})
+legend("topright", horiz = T, legend = c(0.5, 1:4), col = rainbow(5), lty = 1,
+       cex = .75, title = "gamma")
+
+plot(test.errs.rad..5 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[1], 
+     main = "Radial Kernel Test Errors", xlab = "cost", ylab = "Errors")
+lines(test.errs.rad.1 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[2])
+lines(test.errs.rad.2 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[3])
+lines(test.errs.rad.3 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[4])
+lines(test.errs.rad.4 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[5])
+legend("topright", horiz = T, legend = c(0.5, 1:4), col = rainbow(5), lty = 1,
+       cex = .75, title = "gamma")
+```
+All three types of error go to 0 when cost reaches 10. Therefore, the best value of parameter cost is 10. When gamma = 0.5, all three types of error is the lowest, so the optimal value of parameter gamma is 0.5.
+
+Let's verify the results using `best.parameters` found by `svm.tuned.rad`.
+```{r}
+svm.tuned.rad$best.parameters
+```
+
+
+
+**Polynomial Kernels**
+```{r}
+set.seed(6789)
+svm.tuned.poly <- tune(svm, sp ~ FL + RW + CL + CW + BD, 
+                       data = crabs.train, kernel = "polynomial",
+                       ranges = list(cost = c(0.01, 0.1, 1, 5, 10),
+                                     degree = c(0.5, 1, 2, 3, 4)))
+
+# degree = 0.5
+train.errs.poly..5 <- c()
+test.errs.poly..5 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.poly..5 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                         kernel = "polynomial", cost = cost, degree = 0.5)
+  
+  train.pred.poly..5 <- predict(svm.fit.poly..5, crabs.train)
+  train.err.poly..5 <- mean(crabs.train$sp != train.pred.poly..5)
+  train.errs.poly..5 <- c(train.errs.poly..5, train.err.poly..5)
+  
+  test.pred.poly..5 <- predict(svm.fit.poly..5, crabs.test)
+  test.err.poly..5 <- mean(crabs.test$sp != test.pred.poly..5)
+  test.errs.poly..5 <- c(test.errs.poly..5, test.err.poly..5)
+}
+
+# degree = 1
+train.errs.poly.1 <- c()
+test.errs.poly.1 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.poly.1 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                        kernel = "polynomial", cost = cost, degree = 1)
+  
+  train.pred.poly.1 <- predict(svm.fit.poly.1, crabs.train)
+  train.err.poly.1 <- mean(crabs.train$sp != train.pred.poly.1)
+  train.errs.poly.1 <- c(train.errs.poly.1, train.err.poly.1)
+  
+  test.pred.poly.1 <- predict(svm.fit.poly.1, crabs.test)
+  test.err.poly.1 <- mean(crabs.test$sp != test.pred.poly.1)
+  test.errs.poly.1 <- c(test.errs.poly.1, test.err.poly.1)
+}
+
+# degree = 2
+train.errs.poly.2 <- c()
+test.errs.poly.2 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.poly.2 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                        kernel = "polynomial", cost = cost, degree = 2)
+  
+  train.pred.poly.2 <- predict(svm.fit.poly.2, crabs.train)
+  train.err.poly.2 <- mean(crabs.train$sp != train.pred.poly.2)
+  train.errs.poly.2 <- c(train.errs.poly.2, train.err.poly.2)
+  
+  test.pred.poly.2 <- predict(svm.fit.poly.2, crabs.test)
+  test.err.poly.2 <- mean(crabs.test$sp != test.pred.poly.2)
+  test.errs.poly.2 <- c(test.errs.poly.2, test.err.poly.2)
+}
+
+# degree = 3
+train.errs.poly.3 <- c()
+test.errs.poly.3 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.poly.3 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                        kernel = "polynomial", cost = cost, degree = 3)
+  
+  train.pred.poly.3 <- predict(svm.fit.poly.3, crabs.train)
+  train.err.poly.3 <- mean(crabs.train$sp != train.pred.poly.3)
+  train.errs.poly.3 <- c(train.errs.poly.3, train.err.poly.3)
+  
+  test.pred.poly.3 <- predict(svm.fit.poly.3, crabs.test)
+  test.err.poly.3 <- mean(crabs.test$sp != test.pred.poly.3)
+  test.errs.poly.3 <- c(test.errs.poly.3, test.err.poly.3)
+}
+
+# degree = 4
+train.errs.poly.4 <- c()
+test.errs.poly.4 <- c()
+for (cost in c(0.01, 0.1, 1, 5, 10)) {
+  svm.fit.poly.4 <- svm(sp ~ FL + RW + CL + CW + BD, data = crabs.train, 
+                        kernel = "polynomial", cost = cost, degree = 4)
+  
+  train.pred.poly.4 <- predict(svm.fit.poly.4, crabs.train)
+  train.err.poly.4 <- mean(crabs.train$sp != train.pred.poly.4)
+  train.errs.poly.4 <- c(train.errs.poly.4, train.err.poly.4)
+  
+  test.pred.poly.4 <- predict(svm.fit.poly.4, crabs.test)
+  test.err.poly.4 <- mean(crabs.test$sp != test.pred.poly.4)
+  test.errs.poly.4 <- c(test.errs.poly.4, test.err.poly.4)
+}
+
+plot(train.errs.poly..5 ~ c(0.01, 0.1, 1, 5, 10), ylim = c(0, .8), type = "o",
+     col = rainbow(5)[1], main = "Polynomial Kernel Training Errors", 
+     xlab = "cost", ylab = "Errors")
+lines(train.errs.poly.1 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[2])
+lines(train.errs.poly.2 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[3])
+lines(train.errs.poly.3 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[4])
+lines(train.errs.poly.4 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[5])
+legend("topright", horiz = T, legend = c(0.5, 1:4), col = rainbow(5), lty = 1,
+       cex = .75, title = "degree")
+
+with(svm.tuned.poly$performances, {
+  plot(error[degree == 0.5] ~ cost[degree == 0.5], xlim = c(0, 10),
+       ylim = c(0, .8), type = "o", col = rainbow(5)[1], 
+       main = "Polynomial Kernel Cross-validation Errors", 
+       xlab = "cost", ylab = "Error")
+  lines(error[degree == 1] ~ cost[degree == 1], type = "o", col = rainbow(5)[2])
+  lines(error[degree == 2] ~ cost[degree == 2], type = "o", col = rainbow(5)[3])
+  lines(error[degree == 3] ~ cost[degree == 3], type = "o", col = rainbow(5)[4])
+  lines(error[degree == 4] ~ cost[degree == 4], type = "o", col = rainbow(5)[5])
+})
+legend("topright", horiz = T, legend = c(0.5, 1:4), col = rainbow(5), lty = 1,
+       cex = .75, title = "degree")
+
+plot(test.errs.poly..5 ~ c(0.01, 0.1, 1, 5, 10), ylim = c(0, .8), type = "o", 
+     col = rainbow(5)[1], main = "Polynomial Kernel Test Errors", 
+     xlab = "cost", ylab = "Errors")
+lines(test.errs.poly.1 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[2])
+lines(test.errs.poly.2 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[3])
+lines(test.errs.poly.3 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[4])
+lines(test.errs.poly.4 ~ c(0.01, 0.1, 1, 5, 10), type = "o", col = rainbow(5)[5])
+legend("topright", horiz = T, legend = c(0.5, 1:4), col = rainbow(5), lty = 1,
+       cex = .75, title = "degree")
+```
+All three types of error go to 0 when cost reaches 5. Therefore, the best value of parameter cost is 5. When degree = 1, all three types of error is the lowest, so the optimal value of parameter degree is 1.
+
+Let's verify the results using `best.parameters` found by `svm.tuned.poly`.
+```{r}
+svm.tuned.poly$best.parameters
+```
+

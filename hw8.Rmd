@@ -1,0 +1,174 @@
+---
+title: "STATS 415 Homework 8"
+author: "Jiacheng Xie"
+date: "2022/3/22"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+## II. ISLR Chapter 8 Conceptual Exercises 2, 5, 6
+
+2. When using depth-one trees to fit the model, each tree splits only once based on one variable. The fitted model is updated by adding new trees each with one predictor, and the residual is also updated by subtracting residuals each with one predictor. There are no interactions between each two of the predictors. Therefore, the algorithm finally leads to an additive model. 
+
+5. Using the **majority vote approach**, $|P(\text{Class is Red} | X) < 0.5| = 4$ and $|P(\text{Class is Red} | X) \geq 0.5| = 6$. Since the count of {$X$ is more likely to be red} is greater than {$X$ is less likely to be red}, $X$ is classified as red. 
+
+    Using the **average probability**, $\bar{P}(\text{Class is Red} | X) = 0.45$. Since the average probability is smaller than 0.5, $X$ is classified as green. 
+    
+```{r}
+mean(c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75))
+```
+
+6. First, we use binary splitting recursively to grow a very large tree $T_0$ on the training data where each decision boundary of the branch is chosen to minimize RSS. When each terminal node has fewer than our pre-set minimum number of observations, we stop growing the tree. 
+
+    Second, we apply cost complexity pruning to $T_0$: set different values of $\alpha$ and find corresponding sub-trees $T \subset T_0$ that minimizes the expression (8.4) in the textbook. We get a sequence of best sub-trees $T$ as a function of $\alpha$. 
+
+    Third, we use K-fold cross-validation to choose $\alpha$: for each $\alpha$, $k$ = 1, 2, ..., k, repeat the first and second steps using all data except for the $k$th fold, use $k$th fold data to compute test MSE, and then average $k$ test MSEs to get an MSE corresponding to $\alpha$. Compare all MSEs corresponding to $\alpha$, we pick the $\alpha$ that its corresponding MSE is the lowest.
+
+    Finally, we use our best value of $\alpha$ to expression (8.4) to prune $T$ that return the best sub-tree.
+
+## III. Partition, Decision Tree, and Path
+
+![](hw8_graph.jpg)
+
+## IV. Crabs Data Set
+
+```{r}
+library(MASS)
+```
+
+(a)
+```{r}
+set.seed(6789)
+
+crabs.BM <- which(crabs$sp == "B" & crabs$sex == "M")
+crabs.BF <- which(crabs$sp == "B" & crabs$sex == "F")
+crabs.OM <- which(crabs$sp == "O" & crabs$sex == "M")
+crabs.OF <- which(crabs$sp == "O" & crabs$sex == "F")
+
+train.id = c(sample(crabs.BM, size = trunc(0.80 * length(crabs.BM))),
+             sample(crabs.BF, size = trunc(0.80 * length(crabs.BF))),
+             sample(crabs.OM, size = trunc(0.80 * length(crabs.OM))),
+             sample(crabs.OF, size = trunc(0.80 * length(crabs.OF))))
+
+crabs.train <- crabs[train.id, ]
+crabs.test <- crabs[-train.id, ]
+```
+
+(b)
+```{r}
+set.seed(6789)
+library(tree)
+tree.crabs <- tree(sp ~ . - index, data = crabs.train)
+cv.crabs <- cv.tree(tree.crabs, FUN = prune.misclass)
+cv.crabs
+```
+For all models with `size` $\leq$ 11 (no more than 10 splits), the model with size 6 has the lowest cross-validation error rate. Thus, the optimal size of the tree is 6. 
+
+```{r}
+prune.crabs <- prune.misclass(tree.crabs, best = 6)
+plot(prune.crabs)
+text(prune.crabs, pretty = 0, cex = 0.5)
+```
+Only variables `FL`, `CW`, and `BD` are used by the tree. `FL` is the most important variable because the first split is based on the value of `FL`. `CW` is the second most important variable because both second depth decisions are based on `CW`.
+
+```{r}
+train.pred <- predict(prune.crabs, crabs.train, type = "class")
+train.err <- mean(train.pred != crabs.train$sp)
+train.err
+
+test.pred <- predict(prune.crabs, crabs.test, type = "class")
+test.err <- mean(test.pred != crabs.test$sp)
+test.err
+```
+
+(c)
+```{r}
+library(randomForest)
+
+set.seed(6789)
+bag.crabs <- randomForest(sp ~ . - index, data = crabs.train, mtry = 5, 
+                          importance = TRUE, ntree = 1000)
+varImpPlot(bag.crabs)
+```
+The result of random forest is consistent of the result of a single tree. Based on Mean-Decrease-Accuracy plot, `FL` is the most important variable, `CW` is the second important variable, and `BD` is the third important variable. Other variables are not quite important. The Mean-Decrease-Gini plot shows the similar result but `BD` seems to be more important than `CW`. The difference between these two plots is because their algorithms are different.
+
+```{r}
+train.pred.bag <- predict(bag.crabs, newdata = crabs.train)
+train.err.bag <- mean(train.pred.bag != crabs.train$sp)
+train.err.bag
+
+test.pred.bag <- predict(bag.crabs, newdata = crabs.test)
+test.err.bag <- mean(test.pred.bag != crabs.test$sp)
+test.err.bag
+```
+
+(d)
+```{r}
+library(gbm)
+
+# Let '1' denote species is 'B', let '0' denote species is 'O' 
+crabs.train$sp01 <- ifelse(crabs.train$sp == "B", 1, 0)
+crabs.test$sp01 <- ifelse(crabs.test$sp == "B", 1, 0)
+
+train.errs.adb <- c()
+test.errs.adb <- c()
+for (M in 1:1000) {
+  set.seed(6789)
+  adaboo.crabs <- gbm(sp01 ~ . - index - sp, data = crabs.train, 
+                      distribution = "adaboost", n.trees = M)
+  
+  train.prob.adb <- predict(adaboo.crabs, crabs.train, n.trees = M, 
+                            type = "response")
+  train.pred.adb <- ifelse(train.prob.adb > 0.5, 1, 0)
+  train.err.adb <- mean(train.pred.adb != crabs.train$sp01)
+  train.errs.adb <- c(train.errs.adb, train.err.adb)
+  
+  test.prob.adb <- predict(adaboo.crabs, crabs.test, n.trees = M,
+                           type = "response")
+  test.pred.adb <- ifelse(test.prob.adb > 0.5, 1, 0)
+  test.err.adb <- mean(test.pred.adb != crabs.test$sp01)
+  test.errs.adb <- c(test.errs.adb, test.err.adb)
+}
+
+plot(train.errs.adb, xlab = "M")
+plot(test.errs.adb, xlab = "M")
+
+which.min(test.errs.adb)
+```
+When M = 977, the test error is the lowest. Therefore, I choose M to be 977.
+
+```{r}
+set.seed(6789)
+
+M <- 977
+adaboo.crabs <- gbm(sp01 ~ . - index - sp, data = crabs.train, 
+                    distribution = "adaboost", n.trees = M)
+  
+train.prob.adb <- predict(adaboo.crabs, crabs.train, n.trees = M, 
+                          type = "response")
+train.pred.adb <- ifelse(train.prob.adb > 0.5, 1, 0)
+train.err.adb <- mean(train.pred.adb != crabs.train$sp01)
+train.err.adb
+  
+test.prob.adb <- predict(adaboo.crabs, crabs.test, n.trees = M,
+                         type = "response")
+test.pred.adb <- ifelse(test.prob.adb > 0.5, 1, 0)
+test.err.adb <- mean(test.pred.adb != crabs.test$sp01)
+test.err.adb
+```
+
+(e)
+```{r}
+tab <- matrix(c(train.err, train.err.bag, train.err.adb, test.err, test.err.bag,
+                test.err.adb), ncol = 2)
+rownames(tab) <- c("Single Tree", "Rand Forest", "AdaBoost")
+colnames(tab) <- c("Train Err", "Test Err")
+tab
+```
+Since the AdaBoost has the lowest test error, AdaBoost appears to perform best for the dataset. 
+
+```{r}
+summary(adaboo.crabs)
+```
+Based on the relative influence graph, three most important variables are `CW`, `FL`, `BD`, which is consistent with the single tree method and random forest. However, the sequence of these three variables is slightly different over three different methods. AdaBoost claims that the most important variable in `CW` and the second most important variable is `FL`, but both single tree method and random forest claim `FL` is the most important variable and `CW` is the second important variable. Therefore, although the results show a little bit of difference, they are basically consistent across methods. 

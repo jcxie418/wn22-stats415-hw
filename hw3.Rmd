@@ -1,0 +1,175 @@
+---
+title: "STATS 415 Homework 3"
+author: "Jiacheng Xie"
+date: "2022/2/1"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+## I. ISLR Chapter 2 Applied Exercise 9
+
+```{r}
+library(ISLR)
+attach(Auto)
+```
+
+```{r}
+head(Auto)
+```
+
+(a) Quantitative: mpg, cylinders, displacement, horsepower, weight, acceleration, year.
+
+    Qualitative: name, origin.
+
+(b)
+```{r}
+sapply(Auto[, 1:7], range)
+```
+(c)
+```{r}
+sapply(Auto[, 1:7], mean)
+```
+
+```{r}
+sapply(Auto[, 1:7], sd)
+```
+
+(d)
+```{r}
+Auto_removed <- Auto[-c(10:84), ]
+
+sapply(Auto_removed[, 1:7], range)
+```
+
+```{r}
+sapply(Auto_removed[, 1:7], mean)
+```
+
+```{r}
+sapply(Auto_removed[, 1:7], sd)
+```
+
+(e)
+
+```{r}
+pairs(Auto[,1:7])
+```
+
+```{r}
+cor(Auto[,1:7])
+```
+
+There exist positive linear relationships between two of `displacement`, `horsepower`, and `weight`. `mpg` have negative relationship between each of `displacement`, `horsepower`, and `weight`. Since `cylinders` is a quantitative outcome, the relationship seems to be not clear, but there does exist a positive relationship between `cylinders` and `weight`. 
+
+(f) As one of `displacement`, `horsepower`, and `weight` increases, `mpg` decreases. As `year` increases, `mpg` increases. Therefore, we can fit a model between these variables that is useful in predicting `mpg`.
+
+## II. ISLR Chapter 3 Conceptual Exercises 2 and 3
+
+2.
+
+Use: KNN classifier is used to classify the response to a qualitative value of class. KNN regression is used to predict a quantitative value of response. 
+
+Algorithm: KNN classifier is determined by calculating the probability of a neighbor belongs to a each class, and finding the class corresponds to the largest probability. KNN regression is determined by calculating the average values of K nearest neighbors. 
+
+
+3.
+
+Using the OLS estimator to fit the linear model, we get $Y = 50 + 20X_1 + 0.07X_2 + 35X_3 + 0.01 X_4 - 10 X_5$.
+
+(a) iii is correct. 
+
+    High school graduates ($X_3 = 0$) earns the salary of $Y_0 = 50 + 20X_1 + 0.07X_2 + 0.01X_4$. College graduates ($X_3 = 1$) earns the salary of $Y_1 = 85 + 10X_1 + 0.07X_2 + 0.01X_4$. For a given value of IQ and GPA ($X_1$ and $X_2$ are constant), we subtract $Y_0$ from $Y_1$ to get $Y_1 - Y_0 = 35 - 10X_1$. Let $Y_1 - Y_0 < 0$, we get $X_1 > 3.5$. That is, when we fix the value of IQ and GPA, the salary of high school graduates is more than the salary of college graduates provided that the GPA is greater than 3.5. 
+
+(b) For a college graduate with IQ of 110 and a GPA of 4.0, we have $X_1 = 4.0$, $X_2 = 110$, $X_3 = 1$, $X_4 = X_1 X_2 = 440.0$, $X_5 = X_1 X_3 = 4.0$. Plug in these numbers to solve for y, we get
+
+```{r}
+beta_hat <- c(50, 20, 0.07, 35, 0.01, -10)
+X <- c(1, 4.0, 110, 1, 440.0, 4.0)
+as.numeric(beta_hat %*% X)
+```
+
+The starting salary for a college graduate with IQ of 110 and a GPA of 4.0 is about 137.1 thousands of dollars.
+
+(c) False.
+
+    There is an interaction between GPA and IQ. The coefficient $\beta_5 = -10$ is the average increase in the effectiveness of IQ associated with one-unit increase in GPA (and vice versa). We should consider this term to be an adjustment when we are trying to analyze the effect of IQ with some certain values of GPA, or analyze the effect of GPA with some certain values of IQ. It is better for us to calculate the p-value of the coefficient to further determine whether it is significant. 
+
+
+## III. ISLR Chapter 4 Conceptual Exercises 1, 4, 8, and 9
+
+1.
+
+$$\begin {aligned}
+p(X) &= \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}} = 1 - \frac{1}{1 + e^{\beta_0 + \beta_1 X}} \iff 1 - p(X) = \frac{1}{1 + e^{\beta_0 + \beta_1 X}} \\
+&\iff \frac{1}{1 - p(X)} = 1 + e^{\beta_0 + \beta_1 X} \iff \frac{p(X)}{1 - p(X)} = e^{\beta_0 + \beta_1 X}
+\end{aligned}$$
+
+4.
+
+(a) When X is uniformly distributed and p = 1, the fraction of available observations used to make the prediction is $0.1 = 10\%$.
+
+(b) When X is uniformly distributed and p = 2, the fraction of available observations use to make the prediction is $0.1^2 = 1\%$.
+
+(c) When X is uniformly distributed and p = 100, the fraction of available observations use to make the prediction is $0.1^{100}$.
+
+(d) In high dimensional spaces, it is really difficult to find available neighbors used to make the prediction because each of them is too far away from each other. That is called the curse of dimensionality. 
+
+(e) When p = 1, the length of the hypercube is $\sqrt[p] 0.1 = 0.1$. When p = 2, the length of the hypercube is $\sqrt[p] 0.1 = 0.32$. When p = 100, the length of the hypercube is $\sqrt[p] 0.1 = 0.977$.
+
+    When the dimension is higher, the length of hypercube centered around 10% of the training observation is closer to 1. In high dimensional spaces, we need nearly all the observations in each dimension to include a few data points. That is another aspect of the curse of dimensionality. 
+
+8. Logistic regression.
+
+    We prefer the classification methods which have lower test error rate. Because 1-nearest neighbors simply fits all points exactly, its training error rate is 0, so the test error rate of 1-nearest neighbors in this case is 36%. Since the test error rate of logistic regression is 30% smaller than 36%, we prefer to use logistic regression. 
+
+9. 
+
+(a) $$\frac{p(X)}{1 - p(X)} = 0.37 \iff p(X) = 0.27$$
+
+(b) $$\frac{p(X)}{1 - p(X)} = \frac{0.16}{1 - 0.16} = 0.19$$
+
+## IV. KNN Classifier
+
+(a) When $K = 1$, all $\hat{y} = y$, so the training error =  $\frac{Number\ of\ Predicton\ Failures}{Total\ Number\ of\ Trials} = 0$.
+
+    When $K = 9$, all $\hat{y} = -1$, so the training error = $\frac{Number\ of\ Predicton\ Failures}{Total\ Number\ of\ Trials} = \frac{4}{9}$
+
+(b) When $x = -10$, $P(y|_{neighbor} = -1) = 1 > 0.5$, so $\hat{y}|_{x = -10} = -1$.
+
+    When $x = 0$, $P(y|_{neighbor} = -1) = \frac{2}{3} > 0.5$, so $\hat{y}|_{x = 0} = -1$.
+
+    When $x = 10$, $P(y|_{neighbor} = 1) = 1 > 0.5$, so $\hat{y}|_{x = 10} = 1$.
+
+
+(c) $c = 4$.
+
+    Focus on the region near the boundary c. To assign class -1, we need to use data point $x = 1$, $x = 2$, $x = 4$. To assign class 1, we need to use data point $x = 2$, $x = 4$, $x = 7$. If the $x$ is closer to 1, $\hat{y} = -1$. If $x$ is closer to 7, $\hat{y} = 1$. Therefore, the boundary $c = \frac{1 + 7}{2} = 4$.
+
+## V. Logistic Regression
+
+Using the estimator to fit the logistic regression model we get $p(X) = \frac{e^{-4 + 0.05X_1 + X_2}}{1 + e^{-4 + 0.05X_1 + X_2}}$.
+
+(a) For a student who studies 5 hours a week, we have $X_1 = 5$, $x_2 = 1$, $x_3 = 2$. Plug in these numbers to solve for y, we get
+
+```{r}
+beta_hat_log <- c(-4, 0.05, 1)
+X_log <- c(1, 5, 3.5)
+beta_x_log <- as.numeric(beta_hat_log %*% X_log)
+Px <- exp(beta_x_log) / (1 + exp(beta_x_log))
+print(Px)
+```
+
+The probability of getting A for a student who studies 5 hours a week and has a GPA of 3.5 is about 0.44.
+
+(b)
+```{r}
+odds <- Px / (1 - Px)
+print(odds)
+```
+
+(c) $$p(X) = \frac{e^{-4 + 0.05X_1 + X_2}}{1 + e^{-4 + 0.05X_1 + X_2}} = 0.5 \iff e^{-4 + 0.05X_1 + X_2} = 1 \iff -4 + 0.05X_1 + X_2 = 0$$
+
+    Given $X_2 = 3.5$, we get $X_1 = 10$.
+
+    This student need to study 10 hours a week to have a 50% chance of getting an A.

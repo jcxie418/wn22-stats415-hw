@@ -1,0 +1,292 @@
+---
+title: "STATS 415 Homework 7"
+author: "Jiacheng Xie"
+date: "2022/3/15"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+## II. ISLR Chapter 7 Conceptual Exercises
+
+1. (a) $f_1(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 \iff a_1 = \beta_0,\ b_1 = \beta_1,\ c_1 = \beta_2,\ d_1 = \beta_3$
+
+    (b) $f_2(x) = (\beta_0 - \beta_4 \xi^3) + (\beta_1 + 3 \beta_4 \xi^2) x + (\beta_2 - 3 \beta_4 \xi) x^2 + (\beta_3 + \beta_4) x^3$
+    
+    $\iff a_2 = \beta_0 - \beta_4 \xi^3,\ b_2 = \beta_1 + 3 \beta_4 \xi^2,\ c_2 = \beta_2 - 3 \beta_4 \xi,\ d_2 = \beta_3 + \beta_4$
+    
+    (c) $f_2(\xi) = (\beta_0 - \beta_4 \xi^3) + (\beta_1 + 3 \beta_4 \xi^2) \xi + (\beta_2 - 3 \beta_4 \xi) \xi^2 + (\beta_3 + \beta_4) \xi^3 = \beta_0 + \beta_1 \xi + \beta_2 \xi^2 + \beta_3 \xi^3 = f_1(\xi)$
+    
+        Therefore, $f(x)$ is continous at $\xi$.
+    
+    (d) $f_2'(\xi) = (\beta_1 + 3 \beta_4 \xi^2) + 2 (\beta_2 - 3 \beta_4 \xi) \xi + 3 (\beta_3 + \beta_4) \xi^2 = \beta_1 + 2 \beta_2 \xi + 3 \beta_3 \xi^2 = f_1'(\xi)$
+    
+        Therefore, $f'(x)$ is continous at $\xi$.
+    
+    (e) $f_2''(\xi) = 2 (\beta_2 - 3 \beta_4 \xi) + 6 (\beta_3 + \beta_4) \xi = 2 \beta_2 + 6 \beta_3 \xi = f_1''(\xi)$
+    
+        Therefore, $f''(x)$ is continous at $\xi$.
+    
+2. When $\lambda = \infty$, the penalty term is quite large. To minimize $\sum_{i = 1}^n (y_i - g(x_i))^2 + \lambda \int [g^{(m)}(x)]^2 dx$, we need to set $\int [g^{(m)}(x)]^2 dx = 0$ that is equivalent to set $g^{(m)} = 0$.
+
+    (a) $\lambda = \infty,\ m = 0 \iff \hat{g}^0 = 0 \iff \hat{g} = 0$
+    
+    (b) $\lambda = \infty,\ m = 1 \iff \hat{g}^1 = 0 \iff \hat{g} = c$ where c is a constant. 
+    
+    (c) $\lambda = \infty,\ m = 2 \iff \hat{g}^2 = 0 \iff \hat{g} = cx + d$ where c, d are constants.
+    
+    (d) $\lambda = \infty,\ m = 3 \iff \hat{g}^3 = 0 \iff \hat{g} = cx^2 + dx + e$ where c, d, e are constants.
+    
+    (e) When $\lambda = 0$, the penality term equal zero, so $\hat{g}$ fits the data perfectly with training RSS = 0.
+    
+![](hw7_graph.jpg)
+
+3.
+```{r}
+X <- seq(-2, 2, 0.1)
+Y <- rep(NA, length(X))
+
+for (i in 1:length(X)) {
+  Y[i] <- 1 + 1 * X[i] - 2 * (X[i] - 1)^2 * (X[i] >= 1)
+  if (X[i] == 0) yintcept = Y[i]
+  if (Y[i] == 0) xintcept = X[i]
+}
+
+plot(X, Y, type = 'l')
+
+yintcept
+xintcept
+```
+Intercepts: y-intercept = 1, x-intercept = -1.
+
+Slope: When $X \leq 1$, slope = 1; When $X > 1$, slope decreases to zero, and then continue to decrease.
+
+Other information: This function is continuous at $X = 1$, therefore continuous at $-2 \leq X \leq 2$. The minimum -1.0 is at $X = -2$, and the maximum around 2.0 is at around $X = 1.25$.
+
+4.
+```{r}
+X <- seq(-2, 6, 0.01)
+Y <- rep(NA, length(X))
+
+for (i in 1:length(X)) {
+  b1X <- (X[i] >= 0 & X[i] <= 2) - (X[i] - 1) * (X[i] >= 1 & X[i] <= 2)
+  b2X <- (X[i] - 3) * (X[i] >= 3 & X[i] <= 4) + (X[i] > 4 & X[i] <= 5)
+  Y[i] <- 1 + 1 * b1X + 3 * b2X
+  
+  if (X[i] == 0) yintcept = Y[i]
+}
+
+plot(X, Y, type = 'p')
+
+yintcept
+```
+Intercepts: y-intercept = 2, doesn't have x-intercept.
+
+Slope: When $X < 0$, slope = 0; When $0 < X < 1$, slope = 0; When $1 < X < 2$, slope = -1; When $2 < X < 3$, slope = 0; When $3 < X < 4$, slope = 3; When $4 < X < 5$, slope = 0; When $X > 5$, slope = 0.
+
+Other Information: This graph is not continuous at $X = 0$ and $X = 5$. The minimum 1.0 is at $-2 < X < 0$, $2 < X < 3$, and $5 < X < 6$, and the maximum 4.0 is at $4 < X < 5$.
+
+5. (a) $\hat{g}_2$. Because its penalty term put less constraint on high order derivatives of $g(x)$, $\hat{g}_2$ is more flexible than $\hat{g}_1$, so $\hat{g}_2$ has smaller training RSS. 
+
+    (b) It depends on the true relationship between X and Y. If the true relationship is more inflexible, $\hat{g}_1$ will have smaller test RSS. If the true relationship is more flexible, $\hat{g}_2$ will have smaller RSS.
+    
+    (c) Training and test RSSs will be equal. For $\lambda = 0$, both model try to minimize the same term $\sum_{i = 1}^n (y_i - g(x_i))^2$, so $\hat{g}_1 = \hat{g}_2$ and they have same training and test RSS.
+
+## III. Boston Housing Data
+
+```{r}
+library(ISLR2)
+```
+
+(a)
+```{r}
+set.seed(5678)
+
+train.prop <- 0.8
+train.idx <- sample(1:nrow(Boston), size = floor(train.prop * nrow(Boston)))
+
+train_Bos <- Boston[train.idx, ]
+test_Bos <- Boston[-train.idx, ]
+```
+
+(b)
+
+**Polynomial Regression**
+```{r}
+set.seed(5678)
+
+library(boot)
+cv.error.poly <- rep(0, 15)
+for (i in 1:15) {
+  fit <- glm(nox ~ poly(indus, i), data = train_Bos)
+  cv.error.poly[i] <- cv.glm(train_Bos, fit, K = 10)$delta[1]
+}
+df.poly <- which.min(cv.error.poly)
+
+fit.poly <- lm(nox ~ poly(indus, df.poly), data = train_Bos)
+summary(fit.poly)
+```
+This model has a high degree of freedom 14. Most terms have low coefficients except for the term with degree 1. $X^{10}$, $X^{11}$, $X^{13}$ are not significant under $\alpha = 0.05$. The adjusted $R^2$ is decent so we can say the polynomial regression model gives a okay fit of training data. The residual is basically symmetric around mean so the fitted model might not systematically overestimate or underestimate the response. The residual standard error is 0.05872 that is not high. 
+
+**Natural Spline**
+```{r}
+set.seed(5678)
+
+library(splines)
+cv.error.ns <- rep(0, 15)
+for (i in 1:15) {
+  fit <- glm(nox ~ ns(indus, df = i), data = train_Bos)
+  cv.error.ns[i] <- cv.glm(train_Bos, fit, K = 10)$delta[1]
+}
+df.ns <- which.min(cv.error.ns)
+
+fit.ns <- lm(nox ~ ns(indus, df = df.ns), data = train_Bos)
+summary(fit.ns)
+```
+This model has a high degree of freedom 12, but lower than the previous one. All terms have coefficients lower than 1, but only smaller than a half terms are not significant under $\alpha = 0.05$. The adjusted $R^2$ is slightly higher than the previous model so we can say that it gives a okay fit of training data. The residual is a little right-skewed so the fitted model might systematically overestimate the response. The residual standard error is 0.05872 that is the same with the previous one. 
+
+**Smoothing Spline**
+```{r}
+set.seed(5678)
+
+df.ss <- smooth.spline(train_Bos$indus, train_Bos$nox, cv = TRUE)$df
+
+fit.ss <- smooth.spline(train_Bos$indus, train_Bos$nox, df = df.ss)
+print(fit.ss)
+```
+The model has a high degree of freedom 16.81, which is the highest among three models. The RSS is 0.4557 that is not high. The smoothing spline model gives a okay fit of training data.
+
+(c)
+```{r}
+indus.grid <- seq(from = min(Boston$indus), to = max(Boston$indus), by = 0.5)
+```
+
+**Polynomial Regression**
+```{r}
+preds.poly <- predict(fit.poly, newdata = data.frame(indus = indus.grid))
+plot(Boston$nox ~ Boston$indus, cex = .5, col = "grey", 
+     xlab = "indus", ylab = "nox")
+lines(indus.grid, preds.poly, lwd = 2)
+```
+
+```{r}
+fit.poly.ledf <- lm(nox ~ poly(indus, df.poly - 1), data = train_Bos)
+
+preds.poly.ledf <- predict(fit.poly.ledf, newdata = data.frame(indus = indus.grid))
+plot(Boston$nox ~ Boston$indus, cex = .5, col = "grey", 
+     xlab = "indus", ylab = "nox")
+lines(indus.grid, preds.poly.ledf, lwd = 2)
+```
+
+```{r}
+fit.poly.modf <- lm(nox ~ poly(indus, df.poly + 1), data = train_Bos)
+
+preds.poly.modf <- predict(fit.poly.modf, newdata = data.frame(indus = indus.grid))
+plot(Boston$nox ~ Boston$indus, cex = .5, col = "grey", 
+     xlab = "indus", ylab = "nox")
+lines(indus.grid, preds.poly.modf, lwd = 2)
+```
+All these three graphs fit well when `indus` < 17.5. When `indus` > 17.5, all three graphs fail to provide a good fit, where the model with more degree of freedom fluctuates more drastically, and the model with less degree of freedom fluctuates less drastically. Among these models, the model with one more degree of freedom tends to overfit the data, the model with one less degree of freedom tends to underfit the data, and the one who has the optimal degree of freedom fits data the best. 
+
+**Natural Spline**
+```{r}
+preds.ns <- predict(fit.ns, newdata = data.frame(indus = indus.grid))
+plot(Boston$indus, Boston$nox, cex = .5, col = "grey",
+     xlab = "indus", ylab = "nox")
+lines(indus.grid, preds.ns, lwd = 2)
+```
+
+```{r}
+fit.ns.ledf <- lm(nox ~ ns(indus, df = df.ns - 1), data = train_Bos)
+
+preds.ns.ledf <- predict(fit.ns.ledf, newdata = data.frame(indus = indus.grid))
+plot(Boston$indus, Boston$nox, cex = .5, col = "grey",
+     xlab = "indus", ylab = "nox")
+lines(indus.grid, preds.ns.ledf, lwd = 2)
+```
+
+```{r}
+fit.ns.modf <- lm(nox ~ ns(indus, df = df.ns + 1), data = train_Bos)
+
+preds.ns.modf <- predict(fit.ns.modf, newdata = data.frame(indus = indus.grid))
+plot(Boston$indus, Boston$nox, cex = .5, col = "grey",
+     xlab = "indus", ylab = "nox")
+lines(indus.grid, preds.ns.modf, lwd = 2)
+```
+All these three models fit better than three polynomial regression models. Since the natural spline model puts more constraints on boundary, it fits better around the boundary. The model with more degree of freedom are a little bit overfit when `indus` is relatively small. Among these three model, the one who have the optimal degree of freedom fits data the best. 
+
+**Smoothing Spline**
+```{r}
+plot(Boston$indus, Boston$nox, cex = .5, col = "grey")
+lines(fit.ss, lwd = 2)
+legend("topright", legend = "df = 16.813", lty = 1)
+```
+
+```{r}
+fit.ss.ledf <- smooth.spline(train_Bos$indus, train_Bos$nox, df = df.ss - 1)
+
+plot(Boston$indus, Boston$nox, cex = .5, col = "grey")
+lines(fit.ss.ledf, lwd = 2)
+legend("topright", legend = "df = 15.813", lty = 1)
+```
+
+```{r}
+fit.ss.modf <- smooth.spline(train_Bos$indus, train_Bos$nox, df = df.ss + 1)
+
+plot(Boston$indus, Boston$nox, cex = .5, col = "grey")
+lines(fit.ss.modf, lwd = 2)
+legend("topright", legend = "df = 17.813", lty = 1)
+```
+All these three models fit better than three natural spline model. There are not much difference among three graphs of different degrees of freedom. I think the smoothing spline model provides the best fit in our case. 
+
+(d)
+```{r}
+library(gam)
+```
+
+According to those graphs in question (c), the best non-linear function to model `indus`is smoothing spline.  
+```{r}
+set.seed(5678)
+df.ss.indus <- df.ss
+df.ss.indus
+
+df.ss.dis <- smooth.spline(train_Bos$dis, train_Bos$nox, cv = TRUE)$df
+df.ss.dis
+df.ss.rad <- smooth.spline(train_Bos$rad, train_Bos$nox, cv = TRUE)$df
+df.ss.rad
+
+fit.gam <- gam(nox ~ s(indus, df = 16.81374) + s(dis, df = 14.20718) 
+               + s(rad, df = 2.256616), data = train_Bos)
+par(mfrow = c(1, 3))
+plot(fit.gam)
+```
+There is obvious non-linear relationship between `nox` and `indus`. Holding `dis` and `rad` fixed, `nox` tends to be highest when `indus` is around 20, and lowest when `indus` is around 3 and 13. The relationship between `nox` and `dis` are clearly negative and more quadratic than linear. Housing `indus` and `dis` fixed, `nox` will increase when `rad` < 10, and decreases when `rad` > 10. Looking at the distribution of `rad`, we can say that the relationship between `nox` and `rad` are almost linear but it is affected by some outliers.
+
+(e)
+```{r}
+test.pred.poly <- predict(fit.poly, test_Bos)
+test.mse.poly <- mean((test.pred.poly - test_Bos$nox)^2)
+
+test.pred.ns <- predict(fit.ns, test_Bos)
+test.mse.ns <- mean((test.pred.ns - test_Bos$nox)^2)
+
+test.mse.ss <- mean((predict(fit.ss, x = test_Bos$indus)$y - test_Bos$nox)^2)
+
+test.pred.gam <- predict(fit.gam, test_Bos)
+test.mse.gam <- mean((test.pred.gam - test_Bos$nox)^2)
+
+tab <- matrix(c(test.mse.poly, test.mse.ns, test.mse.ss, test.mse.gam,
+                df.poly, df.ns, df.ss, NA),
+              ncol = 2)
+rownames(tab) <- c("Poly", "Natural", "Smooth", "GAM")
+colnames(tab) <- c("Test MSE", "df")
+tab
+
+df.ss.indus
+df.ss.dis
+df.ss.rad
+```
+
+The generalized additive model has degree of freedom 16.81374 with respect to `indus`, degree of freedom 14.20718 with respect to `dis`, and degree of freedom 2.256616 with respect to `rad`. 
+
+The GAM has the lowest test MSE among four models, so GAM is the best model for us to fit the data. Polynomial regression is expected to have the highest test MSE since it performs bad when `indus` is high. There isn't much difference in test MSEs of natural spline and smoothing spline, but the smoothing spline has higher degree of freedom, and that is because their degrees of freedom are defined in different ways. 

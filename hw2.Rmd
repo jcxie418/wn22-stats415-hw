@@ -1,0 +1,178 @@
+---
+title: "STATS 415 Homework 2"
+author: "Jiacheng Xie"
+date: "2022/1/29"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+
+## II. ISLR 2 Conceptual Questions
+
+1. The null hypotheses are: 
+
+   $H_0 : \beta_0 = 0$ (Intercept). $H_0 : \beta_1 = 0$ (TV). $H_0 : \beta_2 = 0$ (radio). $H_0 : \beta_3 = 0$ (newspaper). 
+
+The p-value for the intercept term is significant, so we can reject its null hypothesis and conclude that sales doesn't equal 0 given all other predictors equal 0. 
+
+The p-values for TV and radio are significant, so we can reject their null hypotheses and conclude that there are correlations between sales and TV advertising cost, and between sales and radio advertising cost. 
+
+The p-value for newspaper is not significant, so we cannot reject its null hypothesis and we get no effective information in determining the correlation between sales and newspaper advertising cost. 
+
+4. 
+
+   (a) The training RSS for the cubic regression is lower. Since cubic regression has more degree of freedom (flexibility), it gives a closer fit of the training data. 
+
+   (b) The test RSS for the linear regression is lower. Since the true relationship is linear, the test data are more likely to match linear model. The cubic regression tends to overfit the data. 
+
+   (c) The training RSS for the cubic regression is lower. The reason is the same as part(a).
+
+   (d) It depends. If the true relationship is closer to linear, the test RSS for the linear regression is lower. If the true relationship is closer to cubic or significantly non-linear, the test RSS for the cubic regression is lower. 
+
+5. 
+
+$$\hat{y}_{i} = x_{i} \ \frac{\sum_{i' = 1}^{n} ( x_{i'} y_{i'})} {\sum_{i = 1}^{n} x_{i'}^{2}} = \sum_{i' = 1}^{n} \frac{(x_{i'} y_{i'}) \ x_{i}} {\sum_{i' = 1}^{n} x_{i'}^{2}} = \sum_{i'=1}^{n} \left(\frac{ x_{i} x_{i'} } { \sum_{i' = 1}^{n} x_{i'}^{2} } \ y_{i'} \right) = \sum_{i' = 1}^{n} a_{i'} y_{i'} \ \Leftrightarrow a_{i'} = \frac{ x_{i} x_{i'} } { \sum_{i' = 1}^{n} x_{i'}^{2} }$$
+
+6.
+
+If $x_{i} = \bar{x}$, then $\hat{y_i} = \hat{\beta_0} + \hat{\beta_1} \bar{x}$. Since $\hat{\beta_0} = \bar{y} - \hat{\beta_1} \bar{x}$, $\hat{y_i} = (\bar{y} - \hat{\beta_1} \bar{x}) + \hat{\beta_1} \bar{x} = \bar{y}$. Hence, the least squares line always passes through $(\bar{x}, \bar{y})$. 
+
+
+7. 
+
+$$ \begin {aligned}
+R^2 &= 1 - \frac{RSS}{TSS} = 1 - \frac{\sum_{i = 1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i = 1}^{n} y_i^2} = 1 - \frac{\sum_{i = 1}^{n} (y_i - \hat{\beta}x_i)^2}{\sum_{i = 1}^{n} y_i^2} = 1 - \frac{\sum_{i = 1}^n (y_i-\frac{\sum_{i = 1}^n x_i y_i}{\sum_{i = 1}^{n} x_i^2}x_i) ^2}{\sum_{i = 1}^{n} y_i^2} \\
+&= \frac{\frac{\sum_{i = 1}^{n} (x_i y_i)^2}{\sum_{i = 1}^n x_i^2}}{\sum_{i = 1}^{n} y_i^2} = \frac{(\sum_{i = 1}^{n} x_i y_i)^2}{\sum_{i = 1}^{n} x_i^2 \sum_{i = 1}^{n} y_i^2} = \left(\frac{\sum_{i = 1}^{n} (x_i - \bar{x}) (y_i - \bar{y})}{\sqrt{\sum_{i = 1}^{n}(x_i - \bar{x})^2} \sqrt{\sum_{i = 1}^{n} (y_i - \bar{y})^2}} \right)^2= Cor^2(X, Y)
+\end{aligned}$$
+
+## III. Salary, GPA, Gender, and Working Experience
+
+Using the OLS estimator to fit the linear model, we get $y = 40 + 3x_1 - 2x_2 + 1.5x_3 - 0.5x_1x_2 - 0.1x_1x_3$.
+
+(a) For a female employee with a GPA of 3.5 and 2 years experience, we have $x_1 = 3.5$, $x_2 = 1$, $x_3 = 2$. Plug in these numbers to solve for y, we get
+
+```{r}
+beta_hat <- c(40, 3, -2, 1.5, -0.5, -0.1)
+x <- c(1, 3.5, 1, 2, 3.5 * 1, 3.5 * 2)
+as.numeric(beta_hat %*% x)
+```
+
+  The starting salary for a female employee with a GPA of 3.5 and 2 year experience is about 49.05 thousands of dollars.
+
+(b) Male employees earn more on average. 
+
+    Male employees ($x_2 = 0$) earns the salary of $y_0 = 40 + 3x_1 + 1.5x_3 - 0.1x_1x_3$. Female employees ($x_2 = 1$) earns the salary of $y_1 = 40 + 2.5x_1 - 2 + 1.5x_3 - 0.1x_1x_3$. For a given value of GPA and years of experience ($x_1$ and $x_3$ are constant), we subtract $y_0$ from $y_1$ to get $y_1 - y_0 = -2 - 0.5x_1$. Since $0 \leq x_1 \leq 4$, $y_1 - y_0 < 0$. That is, when we fix the value of GPA and years of experience, the salary of female employees is less than the salary of male employees. Hence, we conclude that male employees earn more on average. 
+
+(c) For male employees, the average increase of salary with a one-unit increase in GPA is 3. For female employees, the average increase of salary with a one-unit increase in GPA is 2.5. The negative coefficient for the interaction term shows that the average increase of salary with a one-unit increase in GPA is lower for women. To make some adjustment with respect to effect, we need to multiply a coefficient $\beta_4 = -0.5$ to the interaction term when fitting the linear regression model. 
+
+(d) There is an interaction between GPA and experience. 
+
+    The coefficient $\beta_5 = -0.1$ is the average increase in the effectiveness of GPA associated with one-unit increase in working experience (and vice versa). We should consider this term to be an adjustment when we are trying to analyze the effect of GPA with some certain values of experience, or analyze the effect of working experience with some certain values of GPA. 
+    
+(e) When $x_3 = 0$, male employees ($x_2 = 0$) earns the salary of $y_0 = 40 + 3x_1$, female employees ($x_2 = 1$) earns the salary of $y_1 = 38 + 2.5x_1$.
+
+```{r}
+library(ggplot2)
+linem = function(x) {40 + 3 * x}
+linef = function(x) {38 + 2.5 * x}
+ggplot(data.frame(x = c(0, 4)), aes(x = x)) +
+  stat_function(fun = linem, color = "blue") +
+  stat_function(fun = linef, color = "red")
+```
+
+(f) Test $H_0: \beta_4 = 0$. If the coefficient for the interaction term between GPA and gender is 0, these two lines should be parallel.
+
+## IV. Carseats Data Set
+
+```{r}
+library(ISLR)
+attach(Carseats)
+```
+(a)
+
+```{r}
+lm_full <- lm(Sales ~ ., data = Carseats)
+summary(lm_full)
+```
+
+$R^2$ is 0.8734 that indicates 87.34% of the true value of sales can be interpreted by the fitted value of model. Since $R^2$ is close to 1, the model perform a good fit of the dataset. 
+
+```{r}
+par(mfrow = c(2, 2))
+plot(lm_full)
+```
+
+Interesting features: 
+
+1. Most predictors have low coefficients so each of them doesn't have great influence on the response.
+
+2. The median of residuals is close to zero so the model doesn't show much bias. 
+
+3. In the common sense more populations lead to higher sales, but in the model the correlation between sales and population is unclear because the p-value of population variable is not significant.
+
+(b)
+
+CompPrice, Income, Advertising, Price, ShelveLoc, Age have significant p-values.
+
+Hypothesis for the variable Urban is $H_0: Urban = No$. Because the p-value for Urban is not significant, we get no effective information in determining the correlation between sales and urban. 
+
+(c)
+
+```{r}
+lm_reduced <- lm(Sales ~ . - Population - Education - Urban - US
+                 , data = Carseats)
+summary(lm_reduced)
+```
+
+The $R^2$ values between full model and reduced model don't have much difference, so both of them present a good fit of the dataset. The reduced model shows slightly worse fit of the dataset. 
+
+(d)
+
+```{r}
+anova(lm_full, lm_reduced)
+```
+
+Since Pr(>F) > 0.05, we cannot reject the null hypothesis and conclude that the reduced model is not significantly better than the full model. Removing insignificant predictors doesn't help fit a better model. 
+
+(e)
+
+$$\begin{aligned}
+Sales &= 5.475226 + 0.092571\ CompPrice + 0.015785\ Income + 0.115903\ Advertising\\
+&- 0.095319\ Price + 4.835675\ ShelveLocGood + 1.951993\ ShelveLocMedium - 0.046128\ Age
+\end{aligned}$$
+
+$\beta_0 = 5.475226$: When all predictors equal 0, sales (in thousands) is expected to be 5.475226 on average. 
+
+$\beta_1 = 0.092571$: When fixing all other predictors as a constant, sales is expected to increase 0.092571 on average with 1 unit increase in CompPrice.
+
+$\beta_2 = 0.015785$: When fixing all other predictors as a constant, sales is expected to increase 0.015785 on average with 1 unit increase in Income.
+
+$\beta_3 = 0.115903$: When fixing all other predictors as a constant, sales is expected to increase 0.115903 on average with 1 unit increase in Advertising.
+
+$\beta_4 = -0.095319$: When fixing all other predictors as a constant, sales is expected to decrease 0.095319 on average with 1 unit increase in Price. 
+
+$\beta_5 = 4.835675$: When fixing all other predictors as a constant, sales is expected to increase 4.835675 on average if SheleveLoc equals Good.
+
+$\beta_6 = 1.951993$: when fixing all other predictors as a constant, sales is expected to increase 1.951993 on average if SheleveLoc equals Medium.
+
+$\beta_7 = -0.046128$: When fixing all other predictors as a constant, sales is expected to decrease 0.046128 on average with 1 unit increase in Age. 
+
+
+(f)
+
+```{r}
+lm_interact <- lm(Sales ~ . - Population - Education - Urban - US + ShelveLoc:Price,
+                  data = Carseats)
+summary(lm_interact)
+```
+
+The p-values of the coefficients are not significant so the interaction term is not necessary.
+
+(g)
+
+```{r}
+anova(lm_reduced, lm_interact)
+```
+
+Since Pr(>F) > 0.05, we cannot reject the null hypothesis and conclude that the interaction model is not significantly better than the reduced model. The interaction term is not needed. 

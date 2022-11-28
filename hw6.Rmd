@@ -1,0 +1,402 @@
+---
+title: "STATS 415 Homework 6"
+author: "Jiacheng Xie"
+date: "2022/3/12"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+## II. ISLR Chapter 6 Conceptual Exercises
+
+1. (a) Best subset model. The algorithm of best subset selection always finds the combination of predictors that minimizes training RSS.
+
+    (b) It depends. Best subset selection finds the model with the smallest training RSS, but that model may overfit the data that causes larger test RSS than forward stepwise or backward stepwise selection. 
+   
+    (c) i. True. The ($k$+1)-variable model is derived by adding 1 predictor to the $k$-variable model. 
+   
+        ii. True. The ($k$+1)-variable model is derived by removing 1 predictor to the $k$-variable model.
+       
+        iii. False. Since starter models are different, forward stepwise and backward stepwise selections select different predictors. 
+        
+        iv. False. The same reason as iii. 
+        
+        v. False. The ($k$+1)-variable model can remove some predictors of the $k$-varibale model and add some new predictors if the action leads to lower training RSS. 
+
+2. (a) iii. As $\lambda$ increases, all predictors goes to zero that makes the model less flexible; the variance decreases faster than the bias increases, so better prediction happens when its increase in bias is less than its decrease in variance. 
+
+    (b) iii. The same reason as (a).
+    
+    (c) ii. Non-linear methods have more degree of freedom that makes the model more flexible; the variance increases faster than the bias decreases, so better prediction happens when its increase in variance is less than its decrease in bias. 
+
+3. (a) iv. As $s$ increases, the constraint on this model becomes less strict, so we have more flexibility to fit the data that makes the training RSS steadily decrease. 
+
+    (b) ii. When $s$ = 0, all $\beta$ = 0 that has low variance and high bias. When $s$ increases from 0, the constraint on the model becomes less strict and then decrease the test RSS. However, after $s$ reaches a certain value, increasing $s$ may cause overfitting and then increase the test RSS. When $s$ is large enough, we get a least square fit that has high variance and low bias.
+    
+    (c) iii. Since the constraint on the model becomes less strict as $s$ increases, the variance will steadily increase. 
+    
+    (d) iv. Since the constrant on the model becomes less strict as $s$ increases, the fitted coefficients are closer to the OLS coefficients that steadily decrease the bias. We can also verify this using bias-variance trade-off. 
+    
+    (e) v. Irreducible error is defined to be a constant. 
+
+4. (a) iii. As $\lambda$ increase, the constraint on this model becomes more strict (all $\beta$ goes to zero). so we have less flexibility to fit the data that makes the training RSS steadily increase. 
+
+    (b) ii. When $\lambda$ = 0, we get a least square fit that has high variance and low bias. When $\lambda$ increases from 0, the increase in bias is less than the decrease in variance and then decrease the test RSS. However, after $\lambda$ reaches a certain value, the increase in bias is more than the decrease in variance and then increase the test RSS. When $\lambda$ is large enough, all $\beta$ = 0 that has low variance and high bias.
+    
+    (c) iv. Since the constraint on the model becomes more strict as $\lambda$ increases, the variance will steadily decrease.
+    
+    (d) iii. Since the constrant on the model becomes more strict as $\lambda$ increases, the fitted coefficients are closer to 0 that steadily increase the bias. We can also verify this using bias-variance trade-off.
+    
+    (e) v. Irreducible error is defined to be a constant.
+
+6.
+```{r}
+y1 <- 12
+beta <- seq(-15, 15, 0.1)
+lambda <- 4
+```
+
+```{r}
+eqn.rid <- (y1 - beta)^2 + lambda * (beta^2)
+beta[which.min(eqn.rid)] ## (6.12)
+
+est.beta.rid <- y1 / (1 + lambda) ## (6.14)
+est.value.rid <- (y1 - est.beta.rid)^2 + lambda * (est.beta.rid^2)
+
+abs(est.beta.rid - beta[which.min(eqn.rid)]) < 0.001
+
+plot(beta, eqn.rid, xlab = "beta", ylab = "Ridge Equation", type = "l")
+points(est.beta.rid, est.value.rid, col = "red", pch = 20, type ="p")
+```
+
+(b)
+```{r}
+eqn.las <- (y1 - beta)^2 + lambda * (abs(beta))
+beta[which.min(eqn.las)] ## (6.13)
+
+est.beta.las <- y1 - lambda / 2 ## (6.15)
+est.value.las <- (y1 - est.beta.las)^2 + lambda * (abs(est.beta.las))
+
+abs(est.beta.las - beta[which.min(eqn.las)]) < 0.001
+
+plot(beta, eqn.las, xlab = "beta", ylab = "Lasso Equation", type = "l")
+points(est.beta.las, est.value.las, col = "red", pch = 20, type ="p")
+```
+
+## III. Adjusted $R^2$
+
+(a)
+$$R_a^2 = 1 - \frac{\text{RSS}/(n - d - 1)}{\text{TSS} / (n - 1)} = 1 - \frac{\text{RSS}}{\text{TSS}} \frac{n - 1}{n - d - 1} \ (n - d - 1 \neq 0 \iff n \neq d + 1)$$
+$$\ 0 \leq R^2 \leq 1 \iff 0 \leq 1 - R^2 \leq 1 \iff 0 \leq \frac{\text{RSS}}{\text{TSS}} \leq 1, \ n > d > 0 \iff n - 1 > n - d - 1 > 0 \iff \frac{n - 1}{n - d - 1} > 1$$
+$$0 \leq \frac{\text{RSS}}{\text{TSS}} \frac{n - 1}{n - d - 1} \leq \frac{n - 1}{n - d - 1} \iff - \frac{n - 1}{n - d - 1} \leq - \frac{\text{RSS}}{\text{TSS}} \frac{n - 1}{n - d - 1} \leq 0 \iff 1 - \frac{n - 1}{n - d - 1} \leq R_a^2 \leq 1$$
+$$\text{Therefore,} \leq 1\ \text{is true for}\ R_a^2,\ \text{but} \geq 0\ \text{is not true.}\ \text{For example, If}\ n = 10,\ d = 6,\ \frac{\text{RSS}}{\text{TSS}} = 0.5,R_a^2 = -0.5 < 0$$
+(b)
+$$R_a^2 = 0 \iff 1 - (1 - R^2) \frac{n - 1}{n - d - 1} = 0 \iff (1 - R^2) \frac{n - 1}{n - d - 1} = 1$$
+$$R^2 = 0.5,\ n = 501 \iff (1 - 0.5) \frac{501 - 1}{501 - d - 1} = 1 \iff \frac{500}{500 - d} = 2 \iff d = 250$$
+$$\text{To make}\ R_a^2 = 0,\ \text{the number of extra uninformative predictor added to model is d - 50 = 200}$$
+
+## IV. College Dataset
+
+```{r}
+library(ISLR)
+```
+
+(a)
+```{r}
+set.seed(234)
+test.prop <- 0.3
+
+test.idx <- sample(1:nrow(College), size = floor(test.prop * nrow(College)))
+
+College$`Accept/Apps` <- College$Accept / College$Apps
+College <- subset(College, select = -c(Accept, Apps))
+
+testCollege <- College[test.idx, ]
+trainCollege <- College[-test.idx, ]
+
+par(mfrow = c(2, 2))
+plot(College$`Accept/Apps`~., data = College, 
+     ylab = "Accept/Apps")
+```
+
+We can observe some negative relationship between Accept/Apps and either of Top10perc, Top25perc, Room.Board, PhD, Terminal and Expend. Therefore, these variable are predictive.
+
+(b)
+```{r}
+lm.full <- lm(`Accept/Apps` ~ ., data = trainCollege)
+
+train.pred.lm <- predict.lm(lm.full, trainCollege)
+train.mse.lm <- mean((train.pred.lm - trainCollege$`Accept/Apps`)^2)
+
+test.pred.lm <- predict.lm(lm.full, testCollege)
+test.mse.lm <- mean((test.pred.lm - testCollege$`Accept/Apps`)^2)
+
+train.mse.lm
+test.mse.lm
+```
+
+(c)
+```{r}
+library(SignifReg)
+nullmodel <- lm(`Accept/Apps` ~ 1, data = trainCollege)
+fullmodel <- lm(`Accept/Apps` ~ ., data = trainCollege)
+```
+
+```{r}
+select.p.fwd <- SignifReg(fit = nullmodel,
+                          scope = list(lower = formula(nullmodel), 
+                                       upper = formula(fullmodel)),
+                          alpha = 0.05, direction = "forward",
+                          adjust.method = "none", trace = FALSE)
+summary(select.p.fwd)
+
+train.pred.fwd <- predict.lm(select.p.fwd, trainCollege)
+train.mse.fwd <- mean((train.pred.fwd - trainCollege$`Accept/Apps`)^2)
+
+test.pred.fwd <- predict.lm(select.p.fwd, testCollege)
+test.mse.fwd <- mean((test.pred.fwd - testCollege$`Accept/Apps`)^2)
+
+train.mse.fwd
+test.mse.fwd
+```
+
+```{r}
+select.p.bwd <- SignifReg(fit = fullmodel,
+                          scope = list(lower = formula(nullmodel), 
+                                       upper = formula(fullmodel)),
+                          alpha = 0.05, direction = "backward",
+                          adjust.method = "none", trace = FALSE)
+summary(select.p.bwd)
+
+train.pred.bwd <- predict.lm(select.p.bwd, trainCollege)
+train.mse.bwd <- mean((train.pred.bwd - trainCollege$`Accept/Apps`)^2)
+
+test.pred.bwd <- predict.lm(select.p.bwd, testCollege)
+test.mse.bwd <- mean((test.pred.bwd - testCollege$`Accept/Apps`)^2)
+
+train.mse.bwd
+test.mse.bwd
+```
+
+(d)
+```{r}
+library(leaps)
+n_predictors <- ncol(College) - 1
+regfit.full <- regsubsets(`Accept/Apps` ~ ., data = trainCollege, 
+                          nvmax = n_predictors)
+reg.summary <- summary(regfit.full)
+```
+
+```{r}
+best.aic <- which.min(reg.summary$cp)
+names(which(reg.summary$which[best.aic, ]))[-1]
+lm.aic <- lm(`Accept/Apps` ~ Private + Enroll + Top10perc + P.Undergrad + 
+               Outstate + Room.Board + Books + S.F.Ratio + perc.alumni + 
+               Expend + Grad.Rate, data = trainCollege)
+summary(lm.aic)
+
+train.pred.aic <- predict.lm(lm.aic, trainCollege)
+train.mse.aic <- mean((train.pred.aic - trainCollege$`Accept/Apps`)^2)
+
+test.pred.aic <- predict.lm(lm.aic, testCollege)
+test.mse.aic <- mean((test.pred.aic - testCollege$`Accept/Apps`)^2)
+
+train.mse.aic
+test.mse.aic
+```
+
+```{r}
+best.bic <- which.min(reg.summary$bic)
+names(which(reg.summary$which[best.bic, ]))[-1]
+lm.bic <- lm(`Accept/Apps` ~ Private + Enroll + Top10perc + 
+               P.Undergrad + Room.Board + Books + S.F.Ratio + Expend 
+             + Grad.Rate, data = trainCollege)
+summary(lm.bic)
+
+train.pred.bic <- predict.lm(lm.bic, trainCollege)
+train.mse.bic <- mean((train.pred.bic - trainCollege$`Accept/Apps`)^2)
+
+test.pred.bic <- predict.lm(lm.bic, testCollege)
+test.mse.bic <- mean((test.pred.bic - testCollege$`Accept/Apps`)^2)
+
+train.mse.bic
+test.mse.bic
+```
+
+```{r}
+best.adjr2 <- which.max(reg.summary$adjr2)
+names(which(reg.summary$which[best.adjr2, ]))[-1]
+lm.adjr2 <- lm(`Accept/Apps` ~ Private + Enroll + Top10perc + P.Undergrad + 
+                 Outstate + Room.Board + Books + S.F.Ratio + perc.alumni + 
+                 Expend + Grad.Rate, data = trainCollege)
+summary(lm.adjr2)
+
+train.pred.adjr2 <- predict.lm(lm.adjr2, trainCollege)
+train.mse.adjr2 <- mean((train.pred.adjr2 - trainCollege$`Accept/Apps`)^2)
+
+test.pred.adjr2 <- predict.lm(lm.adjr2, testCollege)
+test.mse.adjr2 <- mean((test.pred.adjr2 - testCollege$`Accept/Apps`)^2)
+
+train.mse.adjr2
+test.mse.adjr2
+```
+
+(e)
+```{r}
+library(boot)
+```
+
+```{r}
+set.seed(234)
+glm.full <- glm(lm.full)
+cverr.lm <- cv.glm(trainCollege, glm.full, K = 5)$delta[1]
+cverr.lm
+```
+
+```{r}
+set.seed(234)
+glm.fwd <- glm(select.p.fwd)
+cverr.fwd <- cv.glm(trainCollege, glm.fwd, K = 5)$delta[1]
+cverr.fwd
+```
+
+```{r}
+set.seed(234)
+glm.bwd <- glm(select.p.bwd)
+cverr.bwd <- cv.glm(trainCollege, glm.bwd, K = 5)$delta[1]
+cverr.bwd
+```
+
+```{r}
+set.seed(234)
+glm.aic <- glm(lm.aic)
+cverr.aic <- cv.glm(trainCollege, glm.aic, K = 5)$delta[1]
+cverr.aic
+```
+
+```{r}
+set.seed(234)
+glm.bic <- glm(lm.bic)
+cverr.bic <- cv.glm(trainCollege, glm.bic, K = 5)$delta[1]
+cverr.bic
+```
+
+```{r}
+set.seed(234)
+glm.adjr2 <- glm(lm.adjr2)
+cverr.adjr2 <- cv.glm(trainCollege, glm.adjr2, K = 5)$delta[1]
+cverr.adjr2
+```
+
+```{r}
+tabe <- matrix(c(train.mse.lm, train.mse.fwd, train.mse.bwd, train.mse.aic,
+                train.mse.bic, train.mse.adjr2, cverr.lm, cverr.fwd, cverr.bwd,
+                cverr.aic, cverr.bic, cverr.adjr2, test.mse.lm, test.mse.fwd,
+                test.mse.bwd, test.mse.aic, test.mse.bic, test.mse.adjr2), 
+              ncol = 3)
+rownames(tabe) <- c("OLS", "Forward", "Backward", "AIC", "BIC", "Adjusted R^2")
+colnames(tabe) <- c("Train Err", "CV Err","Test Err")
+tabe <- as.table(tabe)
+tabe
+
+rownames(tabe)[which.min(tabe[, "CV Err"])]
+rownames(tabe)[which.min(tabe[, "Test Err"])]
+```
+AIC and Adjusted $R^2$ model have the lowest cross-validation error. Forward selection model have the lowest test error. In this case, the smaller model might be a better option than full model since full model sometimes has even higher cross-validation error or test error.
+
+(f)
+```{r}
+library(glmnet)
+```
+
+```{r}
+X = model.matrix(`Accept/Apps` ~ ., data = College)[, -1]
+y = College$`Accept/Apps`
+
+grid <- 10^seq(10, -2, length = 100)
+```
+
+```{r}
+set.seed(234)
+ridge.mod <- glmnet(X[-test.idx, ], y[-test.idx], alpha = 0)
+cv.out.rid <- cv.glmnet(X[-test.idx, ], y[-test.idx], alpha = 0, lambda = grid)
+bestlam.rid <- cv.out.rid$lambda.min
+
+train.pred.rid <- predict(ridge.mod, s = bestlam.rid, newx = X[-test.idx, ])
+train.mse.rid <- mean((train.pred.rid - y[-test.idx])^2)
+
+test.pred.rid <- predict(ridge.mod, s = bestlam.rid, newx = X[test.idx, ])
+test.mse.rid <- mean((test.pred.rid - y[test.idx])^2)
+
+train.mse.rid
+test.mse.rid
+```
+
+(g)
+```{r}
+set.seed(234)
+lasso.mod <- glmnet(X[-test.idx, ], y[-test.idx], alpha = 1, lambda = grid)
+cv.out.las <- cv.glmnet(X[-test.idx, ], y[-test.idx], alpha = 1)
+bestlam.las <- cv.out.las$lambda.min
+
+predict(lasso.mod, type = "coefficients", s = bestlam.las)
+c("Private", "Top10perc", "P.Undergrad", "Room.Board", "Books", "Expend", 
+  "Grad.Rate")
+
+train.pred.las <- predict(lasso.mod, s = bestlam.las, newx = X[-test.idx, ])
+train.mse.las <- mean((train.pred.las - y[-test.idx])^2)
+
+test.pred.las <- predict(lasso.mod, s = bestlam.las, newx = X[test.idx, ])
+test.mse.las <- mean((test.pred.las - y[test.idx])^2)
+
+train.mse.las
+test.mse.las
+```
+
+(h)
+```{r}
+library(pls)
+```
+
+```{r}
+set.seed(234)
+pcr.fit <- pcr(`Accept/Apps` ~ ., data = trainCollege, scale = TRUE, validation = "CV")
+cverr.pcr <- RMSEP(pcr.fit)$val[1, ,]
+m.pcr <- as.numeric(which.min(cverr.pcr) - 1)
+m.pcr
+
+test.pred.pcr <- predict(pcr.fit, testCollege, ncomp = m.pcr)
+test.mse.pcr <- mean((test.pred.pcr - testCollege$`Accept/Apps`)^2)
+test.mse.pcr
+```
+
+(i)
+```{r}
+set.seed(234)
+pls.fit <- plsr(`Accept/Apps` ~ ., data = trainCollege, scale = TRUE, validation = "CV")
+cverr.pls <- RMSEP(pls.fit)$val[1, ,]
+m.pls <- as.numeric(which.min(cverr.pls) - 1)
+m.pls
+
+test.pred.pls <- predict(pls.fit, testCollege, ncomp = m.pls)
+test.mse.pls <- mean((test.pred.pls - testCollege$`Accept/Apps`)^2)
+test.mse.pls
+```
+
+(j)
+```{r}
+tabj <- matrix(c(test.mse.lm, test.mse.fwd, test.mse.bwd, test.mse.aic,
+                test.mse.bic, test.mse.adjr2, test.mse.rid, test.mse.las, 
+                test.mse.pcr, test.mse.pls), 
+              ncol = 1)
+rownames(tabj) <- c("OLS", "Forward", "Backward", "AIC", "BIC", "Adjusted R^2",
+                   "Ridge", "Lasso", "PCR", "PLS")
+colnames(tabj) <- c("Test Err")
+tabj <- as.table(tabj)
+tabj
+
+mean(tabj[, "Test Err"])
+sd(tabj[, "Test Err"])
+rownames(tabj)[which.min(tabj[, "Test Err"])]
+```
+We can predict the college acceptance rate with an error rate about 0.014 that is quite low. The standard deviation of the test errors is about 0.0005 so there isn't much difference of the test errors resulting from different approaches. I would recommend use forward selection because it has the lowest test error.

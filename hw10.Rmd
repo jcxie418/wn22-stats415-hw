@@ -1,0 +1,144 @@
+---
+title: "STATS 415 Homework 10"
+author: "Jiacheng Xie"
+date: '2022-04-06'
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+## II. ISLR2 Chapter 12 Conceptual Exercise 2
+
+2. 
+```{r}
+D <- as.dist(matrix(c(0, 0.3, 0.4, 0.7,
+                      0.3, 0, 0.5, 0.8,
+                      0.4, 0.5, 0, 0.45,
+                      0.7, 0.8, 0.45, 0), nrow = 4, ncol = 4))
+```
+
+(a)
+```{r}
+plot(hclust(D, method = "complete"), main = "Complete")
+```
+
+(b)
+```{r}
+plot(hclust(D, method = "single"), main = "Single")
+```
+
+(c) Observation 1 and 2 are in cluster 1, and observation 3 and 4 are in cluster 2.
+
+(d) Observation 4 is in cluster 1, and observation 1, 2, and 3 are in cluster 2.
+
+(e)
+```{r}
+plot(hclust(D, method = "complete"), labels = c(2, 1, 4, 3))
+```
+
+
+## III. PCA by Eigen Decomposition
+
+(a)
+```{r}
+Lambda <- matrix(c(4, 0, 0, 1), nrow = 2, ncol = 2)
+U <- matrix(c(0.6, 0.8, -0.8, 0.6), nrow = 2, ncol = 2)
+Cov <- U %*% Lambda %*% t(U)
+Cov
+```
+
+(b)
+```{r}
+Lambda[1, 1]/sum(diag(Lambda))
+```
+80% of variance is explained by the first principal component.
+
+(c)
+```{r}
+X <- c(1, 2)
+score <- X %*% U
+score
+```
+The score on the first principal component is 2.2, and the score on the second principlal components is 0.4.
+
+## IV. USArrests Data
+
+(a)
+```{r}
+hc.complete <- hclust(dist(USArrests), method = "complete")
+plot(hc.complete, main = "Complete")
+```
+
+(b)
+```{r}
+cutree(hc.complete, 5)
+
+library(cluster)
+sil.complete <- silhouette(cutree(hc.complete, 5), dist = dist(USArrests))
+plot(sil.complete, main = "Complete")
+```
+All five groups have average silhouette score greater than 0 indicating that the clustering is generally acceptable. Cluster 3 has the highest silhouette score so points in cluster 3 are better separated with other groups, while cluster 2 has the lowest silhouette score so points in cluster 2 are more likely to overlap with other groups. There is one observation in cluster 1 having a negative silhouette score might be assigned to wrong clusters. The number of observations in cluster 4 is significantly lower than other clusters while all other clusters have closed number of observations. 
+
+(c)
+```{r}
+hc.single <- hclust(dist(USArrests), method = "single")
+plot(hc.single, main = "Single")
+
+cutree(hc.single, 5)
+
+sil.single <- silhouette(cutree(hc.single, 5), dist = dist(USArrests))
+plot(sil.single, main = "Single")
+```
+The average silhouette width is smaller than the one using complete linkage so the overall performance of single linkage is worse than complete linkage. The distribution of observations in each group are significantly skewed so the clustering is not desirable. Cluster 2, 4, and 5 all have only one observation and 0 silhouette score that shows the clustering is worse. There are some observations in cluster 1 and cluster 3 having negative silhouette score might be assigned to wrong clusters. 
+
+(d)
+```{r}
+km.out <- kmeans(USArrests, centers = 5, nstart = 5)
+km.out$cluster
+```
+The algorithm is initialized by setting `nstart = 5` in the arguments of `kmeans` function. The `kmeans` function generates 5 initial random centroids and choose the best one for the algorithm. 
+
+```{r}
+sil.kmeans <- silhouette(km.out$cluster, dist = dist(USArrests))
+plot(sil.kmeans, main = "K-means")
+```
+The K-means method has a similar performance to the complete linkage method since their average silhouette widths are closed to each other. The distribution of observations in each group is similar to that of complete linkage method, namely there is one cluster having significantly fewer observations than other clusters. Also, there is only one observation having a negative silhouette score might be assigned to wrong clusters.
+
+(e)
+```{r}
+USArrests.sc <- scale(USArrests)
+
+hc.complete.sc <- hclust(dist(USArrests.sc), method = "complete")
+plot(hc.complete.sc, main = "Complete")
+
+cutree(hc.complete.sc, 5)
+
+sil.complete.sc <- silhouette(cutree(hc.complete.sc, 5), dist = dist(USArrests.sc))
+plot(sil.complete.sc, main = "Complete")
+```
+The average silhouette width of scaled data is lower than that of unscaled data. The distribution of observations is skewed that cluster 2 has only one observation having silhouette score 0 but cluster 4 has 21 observations. Cluster 1 and cluster 5 have higher silhouette scores so points in these two clusters are better separated than other groups. There are some observations in cluster 4 having negative silhouette scores might be assigned to wrong clusters. 
+
+```{r}
+hc.single.sc <- hclust(dist(USArrests.sc), method = "single")
+plot(hc.single.sc, main = "Single")
+
+cutree(hc.single.sc, 5)
+
+sil.single.sc <- silhouette(cutree(hc.single.sc, 5), dist = dist(USArrests.sc))
+plot(sil.single.sc, main = "Single")
+```
+The average silhouette score is smaller than the one using unscaled data so the overall performance of scaled data is worse. The distribution of observations in each group is even more skewed that the clustering is not desirable. Cluster 2 and 5 both have only one observation and 0 silhouette score that shows the clustering is worse. There are about one fourth of observations in cluster 3 having negative silhouette scores might be assigned to wrong clusters. 
+
+```{r}
+km.out.sc <- kmeans(USArrests.sc, centers = 5, nstart = 5)
+km.out.sc$cluster
+```
+The algorithm is initialized by setting `nstart = 5` in the arguments of `kmeans` function. The `kmeans` function generates 5 initial random centroids and choose the best one for the algorithm. 
+
+```{r}
+sil.kmeans.sc <- silhouette(km.out.sc$cluster, dist = dist(USArrests.sc))
+plot(sil.kmeans.sc, main = "K-means")
+```
+The K-means method with scaled data performs worse than with unscaled data since its average silhouette width is less than that of unscaled data. However, the distribution of observations in each group is evener than that of unscaled data where all clusters have the number of observations between 7 and 14. There are a few observations having negative silhouette scores might be assigned to wrong clusters. 
+
+(f) Scaling the variables have on hierarchical clustering leads to worse performance and less even distribution of observations. Scaling the variables have on K-means clustering leads to worse performance as well but a evener distribution of observations. I think the variables should not be scaled before clustering in this example because for all three methods we have worse results of average silhouette width by fitting scaled data. 

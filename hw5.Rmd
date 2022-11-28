@@ -1,0 +1,324 @@
+---
+title: "STATS 415 Homework 5"
+author: "Jiacheng Xie"
+date: "2022/2/17"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r}
+library(ISLR)
+library(boot)
+library(ISLR2)
+```
+
+## II. ISLR Chapter 5 Conceptual Exercises 2, 3, 4
+
+2. (a) There are $n$ observations in the data set, and there are $n - 1$ possible ways that the bootstrap observation appears at $j$th position. We want to calculate the probability that the first bootstrap observation is $not$ the $j$th observation from the original sample. That is, $p = 1 - \frac{1}{n}$.
+
+    (b) The same, $p = 1 - \frac{1}{n}$.
+
+    (c) The probability that the each bootstrap observation is $not$ the $j$th observation from the original sample is $1 - \frac{1}{n}$, and there are $n$ observations in the original sample. Therefore, the probability that the $j$th observation is $not$ in the bootstrap sample is $(1 - \frac{1}{n})^n$.
+    
+    (d) When $n = 5$, $p = 1 - (1 - \frac{1}{5})^5 = 0.672$. 
+    
+    (e) When $n = 100$, $p = 1 - (1 - \frac{1}{100})^{100} = 0.634$.
+
+    (f) When $n = 10,000$, $p = 1 - (1 - \frac{1}{10,000})^{10,000} = 0.632$. 
+    
+    (g)
+```{r}
+n = 1:100000
+p = 1 - (1 - (1 / n))^n
+plot(n, p)
+```
+As $n$ increases, $p$ decreases rapidly in first few sample sizes and then converges to $1 - \frac{1}{e} = 0.63$. 
+
+  (h)
+```{r}
+store <- rep (NA, 10000)
+for (i in 1:10000) {
+  store[i] <- sum(sample(1:100, rep = TRUE) == 4) > 0
+}
+mean(store)
+```
+The result is close to $p = 1 - (1 - \frac{1}{10,000})^{10,000} = 0.632$. Hence, we get a good estimator using bootstrap. 
+
+3. (a) In $k$-fold cross-validation, we randomly divide the training data set into $k$ groups (folds) of approximately equal size. First, We treat 1st fold as the validation set, fit the model on the remaining $k - 1$ folds, and compute the mean squared error $MSE_1$ using the validation set. We repeat this process $k$ times, each time treat $kth$ fold as the validation set, using the same algorithm to compute $MSE_k$. We get an $k$-fold cross-validation estimate of MSE by averaging $MSE_1, MSE_2, ..., MSE_k$.
+
+    (b)
+    i. Advantage: K-fold cross validation has less variance in test error estimate, and K-fold cross validation won't overestimate the test error much as the validation set approach does. 
+    
+       Disadvantage: K-fold cross validation is more expensive to compute. We only need to fit one model on the training set in the validation set approach, but we need to fit $k$ models on $k$ different training set in the K-fold cross validation. 
+    
+    ii. Advantage: K-fold cross validation is less expensive and less time-consuming.  We need to fit $n$ models where typically $n >> k$ on $n$ different training sets in LOOCV, but we only need to fit $k$ models on $k$ different training sets in K-fold cross validation approach. 
+    
+        Disadvantage: K-fold cross validation has higher bias than LOOCV because it has fewer training data. 
+    
+4. Use bootstrap to estimate the standard deviation of our prediction.
+
+    First, select and fit a reasonable statistical learning model and create a function relationship between $Y$ and $X$. Next, sample n observation of $X$ with replacement in the dataset and pass it to the function to generate n predictions of $Y$. Then, repeat the above process $B$ times to get $B$ different predictions of $Y$, apply the formula 5.8 in the textbook we can compute the standard error. The standard deviation is the standard error we have just calculated. 
+
+## III. ISLR Chapter 5 Applied Exercises 5, 7, 8, 9
+
+5.
+
+(a)
+```{r}
+lr.fit <- glm(default ~ income + balance, data = Default, family = "binomial")
+```
+
+(b)
+```{r}
+# i.
+N <- nrow(Default)
+train.prop <- 0.5
+
+set.seed(1)
+train.idx <- sample(seq(N), size = round(N * train.prop))
+test.idx <- seq(N)[-train.idx]
+Default.train <- Default[train.idx, ]
+Default.test <- Default[test.idx, ]
+
+## ii.
+lr.train <- glm(default ~ income + balance, data = Default.train, family = 
+                "binomial")
+
+lr.probs.t <- predict(lr.train, Default.test, type = "response")
+lr.preds.t <- rep("No", length(Default.test$default))
+lr.preds.t[lr.probs.t > 0.5] = "Yes"
+
+# iii.
+conf.lr.t <- table(lr.preds.t, Default.test$default)
+
+# iv.
+1 - sum(diag(conf.lr.t))/sum(conf.lr.t)
+```
+
+(c)
+```{r}
+vserrors <- c()
+seed <- c(12, 123, 1234)
+
+for (i in 1:3) {
+  set.seed(seed[i])
+  train.idx.vs <- sample(seq(N), size = round(N * train.prop))
+  test.idx.vs <- seq(N)[-train.idx.vs]
+  Default.train.vs <- Default[train.idx.vs, ]
+  Default.test.vs <- Default[test.idx.vs, ]
+  
+  lr.vs <- glm(default ~ income + balance, data = Default.train.vs, 
+               family = "binomial")
+  
+  lr.probs.vs <- predict(lr.vs, Default.test.vs, type = "response")
+  lr.preds.vs <- rep("No", length(Default.test.vs$default))
+  lr.preds.vs[lr.probs.vs > 0.5] = "Yes"
+  
+  conf.lr.vs <- table(lr.preds.vs, Default.test.vs$default)
+  
+  vserror <- 1 - sum(diag(conf.lr.vs))/sum(conf.lr.vs)
+  vserrors <- c(vserrors, vserror)
+}
+
+vserrors
+```
+The test errors of three splits are similar to each other because the algorithms of estimating these errors are same. Small differences in these results is due to different splits of observations for each model we used. 
+
+(d)
+```{r}
+set.seed(1)
+lr.all <- glm(default ~ ., data = Default, family = "binomial")
+
+lr.probs.all <- predict(lr.all, Default.test, type = "response")
+lr.preds.all <- rep("No", length(Default.test$default))
+lr.preds.all[lr.probs.all > 0.5] = "Yes"
+
+conf.lr.all <- table(lr.preds.all, Default.test$default)
+
+1 - sum(diag(conf.lr.all))/sum(conf.lr.all)
+```
+Including a dummy variable for `student` doesn't lead to a reduction in the test error rate. 
+
+7.
+
+(a)
+```{r}
+lr.a <- glm(Direction ~ Lag1 + Lag2, data = Weekly, family = "binomial")
+```
+
+(b)
+```{r}
+lr.b <- glm(Direction ~ Lag1 + Lag2, data = Weekly[-1,], family = "binomial")
+```
+
+(c)
+```{r}
+lr.probs.b <- predict(lr.b, Weekly[1, ], type = "response")
+lr.preds.b <- "Down"
+lr.preds.b[lr.probs.b > 0.5] = "Up"
+
+lr.preds.b == Weekly[1, ]$Direction
+```
+This observation is incorrectly classified. 
+
+(d)
+```{r}
+looerrors <- c()
+
+for (i in 1:length(Weekly$Direction)) {
+  ## i.
+  lr.n <- glm(Direction ~ Lag1 + Lag2, data = Weekly[-i, ], family = "binomial")
+  
+  ## ii.
+  lr.probs.n <- predict(lr.n, Weekly[i, ], type = "response")
+  
+  ## iii.
+  lr.preds.n <- "Down"
+  lr.preds.n[lr.probs.n > 0.5] = "Up"
+  
+  ## iv.
+  looerror <- as.numeric(lr.preds.n != Weekly[i, ]$Direction)
+  looerrors <- c(looerrors, looerror)
+}
+```
+
+(e)
+```{r}
+mean(looerrors)
+```
+The test error is large that half of the responses are misclassified (rather than tossing coins to estimate the test error). We get a bad estimator using LOOCV in this case. 
+
+8.
+
+(a)
+```{r}
+set.seed(1)
+x <- rnorm(100)
+y <- x - 2 * x^2 + rnorm(100)
+```
+$n = 100$, $p = 2$, $Y = X - 2X^2 + \epsilon$, and $\epsilon \sim N(0, 1)$.
+
+(b)
+```{r}
+plot(x, y)
+```
+The data set is highly non-linear and the relationship between $X$ and $Y$ seems to be quadratic. 
+
+(c)
+```{r}
+set.seed(123)
+df <- data.frame(x, y)
+
+cv.error <- numeric(4)
+for (p in 1:4) {
+  glm.fit <- glm(y ~ poly(x, p), data = df)
+  cv.error[p] <- cv.glm(df, glm.fit)$delta[1]
+}
+cv.error
+```
+
+(d)
+```{r}
+set.seed(124)
+df <- data.frame(x, y)
+
+cv.error <- numeric(4)
+for (p in 1:4) {
+  glm.fit <- glm(y ~ poly(x, p), data = df)
+  cv.error[p] <- cv.glm(df, glm.fit)$delta[1]
+}
+cv.error
+```
+The result is exactly the same as (c). Since we have to leave every point out exactly once to compute cross validation error using LOOCV, there is no randomness of the estimator. No matter what seed we set, we should always get the same result. 
+
+(e) The quadratic model has the smallest LOOCV error. This is what we expected because the true data set is roughly quadratic in shape as we shown in (b), and the term with the highest power of the original equation is $X^2$.
+
+(f)
+```{r}
+set.seed(123)
+
+df <- data.frame(x, y)
+```
+
+```{r}
+summary(glm(y ~ poly(x, 1), data = df))
+```
+For model i, none of the coefficients besides the intercept term is statistically significant. This agrees with the conclusion that the model with degree of freedom 1 performs the worst among these 4 models. 
+
+```{r}
+summary(glm(y ~ poly(x, 2), data = df))
+```
+For model ii, all coefficients besides the intercept term ($X$ and $X^2$) are statistically significant. This agrees with the conclusion that the model with degree of freedom 2 performs the best among these 4 models. 
+
+```{r}
+summary(glm(y ~ poly(x, 3), data = df))
+```
+For model iii, the coefficients $X$ and $X^2$ are statistically significant, and the coefficient of $X^3$ is not statistically significant. This matches model ii performs the best. 
+
+```{r}
+summary(glm(y ~ poly(x, 4), data = df))
+```
+For model iv, the coefficients $X$ and $X^2$ are statistically significant, and the coefficients of $X^3$ and $X^4$ are not statistically significant. This matches model ii performs the best. 
+
+9. 
+
+(a)
+```{r}
+mu <- mean(Boston$medv)
+mu
+```
+
+(b)
+```{r}
+se <- sd(Boston$medv) / sqrt(length(Boston$medv))
+se
+```
+The standard error is relatively small when compared to the mean value of 22.53, so we can be reasonably confident of the estimate. 
+
+(c)
+```{r}
+boot.mean <- function(data, index) {
+  mean(data[index])
+}
+
+boot(Boston$medv, boot.mean, 1000)
+```
+The standard error using bootstrap with B = 1000 is 0.4097, which is close to what we got in (b), so we get a good estimator using bootstrap in the case. 
+
+(d)
+```{r}
+c(mu - 2 * se, mu + 2 * se)
+
+t.test(Boston$medv)$conf
+```
+Two confidence intervals are nearly the same using the formula or t-test, so we get a good estimator using bootstrap in this case. 
+
+(e)
+```{r}
+median(Boston$medv)
+```
+
+(f)
+```{r}
+boot.median <- function(data, index) {
+  median(data[index])
+}
+
+boot(Boston$medv, boot.median, 1000)
+```
+The standard error is relatively small when compared to the median value of 21.2, so we can be reasonably confident of the estimate. 
+
+(g)
+```{r}
+quantile(Boston$medv, 0.1)
+```
+
+(h)
+```{r}
+boot.quantile <- function(data, index) {
+  quantile(data[index], 0.1)
+}
+boot(Boston$medv, boot.quantile, 1000)
+```
+The standard error is relatively small when compared to the percentile value of 12.75, so we can be reasonably confident of the estimate. 

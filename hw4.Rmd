@@ -1,0 +1,471 @@
+---
+title: "STATS 415 Homework 4"
+author: "Jiacheng Xie"
+date: "2022/2/13"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r}
+library(ISLR)
+library(MASS)
+library(FNN)
+```
+
+## II. ISLR Chapter 4 Conceptual Exercises 2, 3, 5, 7
+
+2. $$c = \frac{1}{\sum_{l = 1}^K \pi_l \exp(-\frac{1}{2\sigma^2} (x - \mu_l)^2)} \iff p_k(x) = c \pi_k \exp(-\frac{1}{2\sigma^2}(x - \mu_k)^2)$$
+$$\log(p_k(x)) = \log(c) + \log(\pi_k) - \frac{1}{2\sigma^2}(x - \mu_k)^2 = \log(c) + \log(\pi_k) -\frac{x^2}{2\sigma^2} + \frac{x\mu_k}{\sigma^2} - \frac{\mu_k^2}{2\sigma^2}$$
+$$ d = -\frac{x^2}{2\sigma^2} \iff log(p_k(x)) = log(c) + d + \frac{x\mu_k}{\sigma^2} - \frac{\mu_k^2}{2\sigma^2} + \log(\pi_k) = \log(c) + d + \delta_k(x)$$
+$$c, d\ \text{is constant to}\ k \iff \arg \max_k p_k(x) = \arg\max_k \delta_k(x)$$
+3. $$c = \frac{1}{\sum_{l = 1}^K \frac{\pi_l}{\sigma_l} \exp(-\frac{1}{2\sigma_l^2} (x - \mu_l)^2)} \iff p_k(x) = c \frac{\pi_k}{\sigma_k} \exp(-\frac{1}{2\sigma_k^2}(x- \mu_k)^2)$$
+$$\log(p_k(x)) = \log(c) + \log(\frac{\pi_k}{\sigma_k}) - \frac{1}{2\sigma_k^2}(x - \mu_k)^2 = \log(c) + \log(\pi_k) - log(\sigma_k) -\frac{x^2}{2\sigma_k^2} + \frac{x\mu_k}{\sigma_k^2} - \frac{\mu_k^2}{2\sigma_k^2}$$
+$$\delta_k(x) = \log(\pi_k) - log(\sigma_k) -\frac{x^2}{2\sigma_k^2} + \frac{x\mu_k}{\sigma_k^2} - \frac{\mu_k^2}{2\sigma_k^2} \iff \log(p_k(x)) = \log(c) + \delta_k(x)$$
+$$c\ \text{is constant to}\ k \iff \arg \max_k p_k(x) = \arg\max_k \delta_k(x)$$
+$$\text{Since}\ \delta_k(x)\ \text{have the term}\ x^2,\ \text{the Bayes classifier is not linear but quadratic.}$$ 
+
+
+5. (a) QDA performs better on the training set. LDA performs better on the test set.
+
+    (b) QDA performs better on both the training set and the test set.
+
+    (c) The test prediction accuracy of QDA improves. As the sample size n increases, the data set are less likely to be exactly linear so increase the dimension of discriminant analysis helps to fit the data more closely. In addition, when the sample size is very large, flexible model reduce the bias of the model and is less likely to overfit the data. 
+
+    (d) False. Because the Bayes decision boundary is linear, using LDA gives a lower test error rate. Using QDA may cause over-fitting which increases the test error rate. 
+
+7. $$\text{Denote}\ Yes\ \text{by}\ Y = 1,\ No\ \text{by}\ Y = 0$$
+$$\begin{aligned}
+P(Y = 1| X = 4) &= \frac{P(Y = 1)P(X = 4 | Y = 1)}{P(X = 4)} = \frac{\pi_1 f_1(4)}{\sum_{l = 0}^{1} \pi_l f_l(4)} = \frac{\pi_1 \exp(-\frac{1}{2\sigma^2} (4 - 
+\bar{X_1})^2)}{\sum_{l = 0}^1 \pi_l \exp(-\frac{1}{2\sigma^2} (4 - \bar{X_l})^2)} \\
+& = \frac{0.8 \times \exp(-\frac{1}{2 \times 36} (4 - 10)^2)}{0.2 \times \exp(-\frac{1}{2 \times 36} (4 - 0)^2) + 0.8 \times \exp(-\frac{1}{2 \times 36} (4 - 10)^2)} = 0.752
+\end{aligned}$$
+
+```{r}
+(0.8 * exp((-1/(2 * 36) * (4 - 10)^2))) / 
+  ((0.2 * exp((-1/(2 * 36) * (4 - 0)^2))) + 
+     (0.8 * exp((-1/(2 * 36) * (4 - 10)^2)))) 
+```
+
+## III. LDA and QDA for a Binary Response
+
+(a) $$\begin{aligned}
+&p_1(x) > p_2(x) \iff \hat{\delta_1}(x) > \hat{\delta_2}(x) \iff \frac{x \hat{\mu_1}}{\hat{\sigma}^2} - \frac{\hat{\mu_1}^2}{2 \hat{\sigma}^2} + \log(\hat{\pi}) > \frac{x 
+\hat{\mu_2}} {\hat{\sigma}^2} - \frac{\hat{\mu_2}^2}{2 \hat{\sigma}^2} + \log(\hat{\pi}) \\
+\iff & 2x \hat{\mu_1} - \hat{\mu_1}^2 > 2x \hat{\mu_2} - \hat{\mu_2}^2 \iff 2(\hat{\mu_1} - \hat{\mu_2}) x > \hat{\mu_1}^2 - \hat{\mu_2}^2 \iff x < \frac{\hat{\mu_1} + 
+\hat{\mu_2}}{2} = 1
+\end{aligned}$$
+$$c = 1$$
+
+```{r}
+x <- seq(-5, 3, by = 0.01)
+d <- dnorm(x, -1, 1)
+plot(x, d, type = 'l', xlim = c(-5, 7), col = "red", ylab = "density")
+lines(x + 4, d, type = 'l', col = "blue")
+abline(v = 1)
+legend("topright", c("class 1", "class 2"), lty = c(1), col = c("red", "blue"))
+text(1, 0.35, "c = 1")
+```
+
+(b)
+Since the prior of class 1 is smaller than the prior of class 2, we expected the decision region for class 1 is narrower, so $\tilde{c}$ is less than $c$.
+
+(c) $$\begin{aligned}
+&p_1(x) > p_2(x) \iff \hat{\delta_1}(x) > \hat{\delta_2}(x) \iff \frac{x \hat{\mu_1}}{\hat{\sigma}^2} - \frac{\hat{\mu_1}^2}{2 \hat{\sigma}^2} + \log(\hat{\pi_1}) > \frac{x 
+\hat{\mu_2}} {\hat{\sigma}^2} - \frac{\hat{\mu_2}^2}{2 \hat{\sigma}^2} + \log(\hat{\pi_2}) \\
+\iff & 2(\hat{\mu_1} - \hat{\mu_2}) x > \hat{\mu_1}^2 - \hat{\mu_2}^2 + 2\hat{\sigma}^2 \log(\frac{\hat{\pi_2}}{\hat{\pi_1}}) \iff x < \frac{\hat{\mu_1} + \hat{\mu_2}}{2} + \frac{\hat{\sigma}^2 
+\log(\frac{\hat{\pi_2}}{\hat{\pi_1}})}{\hat{\mu_1} - \hat{\mu_2}} = 1 + \frac{1}{4} \log(\frac{2}{3})
+\end{aligned}$$
+$$\tilde{c} = 1 + \frac{1}{4} \log(\frac{2}{3})$$
+
+(d) QDA. Since the class specific covariances are obviously unequal, I would recommend using QDA. 
+
+(e) $$\begin{aligned}
+&p_1(x) > p_2(x) \iff \hat{\delta_1}(x) > \hat{\delta_2}(x) \iff - \log(\hat{\sigma_1}) -\frac{(x - \hat{\mu_1})^2}{2\hat{\sigma_1}^2} > - \log(\hat{\sigma_2}) -\frac{(x - \hat{\mu_2})^2}{2\hat{\sigma_2}^2} 
+\\
+\iff &\left(\frac{1}{\hat{\sigma_2}^2} - \frac{1}{\hat{\sigma_1}^2}\right)x^2 - 2\left(\frac{\hat{\mu_2}}{\hat{\sigma_2}^2} - \frac{\hat{\mu_1}}{\hat{\sigma_1}^2}\right)x + 
+\left(\frac{\hat{\mu_2}^2}{\hat{\sigma_2}^2} - \frac{\hat{\mu_1}^2}{\hat{\sigma_1}^2}\right) + \log \left(\frac{\hat{\sigma_2}^2}{\hat{\sigma_1}^2} \right) > 0 \iff -3.892 < x < 
+0.292
+\end{aligned}$$
+
+```{r}
+a <- 1/(1.5) - 1/(0.25)
+b <- -2 * (3/1.5 - (-1)/ 0.25)
+c <- (3^2)/1.5 - ((-1)^2)/0.25 + log(1.5/0.25)
+
+delta <- function(a, b, c){
+  b^2 - 4 * a * c
+}
+
+quadRoots <- function (a, b, c) {
+  if (delta(a, b, c) > 0){
+    x_1 = (-b + sqrt(delta(a, b, c)))/(2 * a)
+    x_2 = (-b - sqrt(delta(a, b, c)))/(2 * a)
+    return(c(x_1,x_2))
+  }
+  else if(delta(a, b, c) == 0) {
+    x = -b / (2 * a)
+    return(x)
+  }
+  else {
+    "No real roots."
+    }
+}
+
+quadRoots(a, b, c)
+```
+
+## IV. Smarket Data Set
+
+```{r}
+attach(Smarket)
+head(Smarket)
+```
+
+```{r}
+summary(Smarket)
+```
+
+```{r}
+pairs(Smarket[1:8], col = c("blue", "red")[Smarket$Direction], 
+      pch = c(1, 2)[Smarket$Direction])
+par(xpd = TRUE)
+legend("right", as.vector(unique(Smarket$Direction)), col = c("blue", "red"), 
+       pch = 1:3, cex = 0.5)
+```
+
+```{r}
+par(mfrow = c(2, 4))
+plot(Smarket$Direction, Smarket$Year, main = "Year vs Direction", ylab = "Year")
+plot(Smarket$Direction, Smarket$Lag1, main = "Lag1 vs Direction", ylab = "Lag1")
+plot(Smarket$Direction, Smarket$Lag2, main = "Lag2 vs Direction", ylab = "Lag2")
+plot(Smarket$Direction, Smarket$Lag3, main = "Lag3 vs Direction", ylab = "Lag3")
+plot(Smarket$Direction, Smarket$Lag4, main = "Lag4 vs Direction", ylab = "Lag4")
+plot(Smarket$Direction, Smarket$Lag5, main = "Lag5 vs Direction", ylab = "Lag5")
+plot(Smarket$Direction, Smarket$Volume, main = "Volume vs Direction",
+     ylab = "Volume")
+plot(Smarket$Direction, Smarket$Today, main = "Today vs Direction", 
+     ylab = "Today")
+```
+
+Patterns: The variable `Today` have obvious relationship with `Direction`. Other variables don't have clear relationship with `Direction`.
+
+(b)
+```{r}
+smarket.train <- Smarket[Year < 2005, ]
+smarket.test <- Smarket[Year == 2005, ]
+```
+
+```{r}
+smarket.lda <- lda(Direction ~ Lag1 + Lag2, data = smarket.train)
+smarket.lda
+```
+
+```{r}
+smarket.lda.testpred <- predict(smarket.lda, smarket.test)$class
+conf.test.lda <- table(predicted = smarket.lda.testpred, 
+                       actual = smarket.test$Direction)
+conf.test.lda
+```
+
+```{r}
+sum(diag(conf.test.lda)) / sum(conf.test.lda)
+```
+
+(c)
+```{r}
+smarket.qda <- qda(Direction ~ Lag1 + Lag2, data = smarket.train)
+smarket.qda
+```
+
+```{r}
+smarket.qda.testpred <- predict(smarket.qda, smarket.test)$class
+conf.test.qda <- table(predicted = smarket.qda.testpred, 
+                       actual = smarket.test$Direction)
+conf.test.qda
+```
+
+```{r}
+sum(diag(conf.test.qda))/sum(conf.test.qda)
+```
+
+## V. Auto Data Set
+
+```{r}
+attach(Auto)
+```
+
+(a) 
+```{r}
+mpg01 <- as.factor(as.numeric(mpg > 25))
+nAuto <- data.frame(Auto, mpg01)
+head(nAuto)
+```
+
+(b)
+```{r}
+pairs(nAuto[2:8], col = c("blue", "red")[nAuto$mpg01], 
+      pch = c(1, 2)[nAuto$mpg01])
+par(xpd = TRUE)
+legend("right", as.vector(unique(nAuto$mpg01)),
+       col = c("blue", "red"), pch = 1:2, cex = 0.5)
+```
+
+```{r}
+par(mfrow = c(2, 4))
+plot(nAuto$mpg01, nAuto$cylinders, main = "cylinders vs mpg01", 
+     ylab = "cylinders")
+plot(nAuto$mpg01, nAuto$displacement, main = "displacement vs mpg01", 
+     ylab = "displacement")
+plot(nAuto$mpg01, nAuto$horsepower, main = "horsepower vs mpg01", 
+     ylab = "horsepower")
+plot(nAuto$mpg01, nAuto$weight, main = "weight vs mpg01", ylab = "weight")
+plot(nAuto$mpg01, nAuto$acceleration, main = "acceleration vs mpg01", 
+     ylab = "acceleration")
+plot(nAuto$mpg01, nAuto$year, main = "year vs mpg01", ylab = "year")
+plot(nAuto$mpg01, nAuto$origin, main = "origin vs mpg01", ylab = "origin")
+```
+
+There seems to be positive linear relationship between each two of displacement, horsepower, and weight. There seems to be negative relationship between acceleration and each of displacement, horsepower, and weight. 
+
+Cylinders, displacement, horsepower, weight seem most likely useful in predicting `mpg01`.
+
+(c)
+```{r}
+set.seed(123)
+nAuto_0 <- which(nAuto$mpg01 == 0)
+nAuto_1 <- which(nAuto$mpg01 == 1)
+train_id <- c(sample(nAuto_0, size = trunc(0.8 * length(nAuto_0))), 
+              sample(nAuto_1, size = trunc(0.8 * length(nAuto_1))))
+nAuto_train <- nAuto[train_id, ]
+nAuto_test <- nAuto[-train_id, ]
+```
+
+(d)
+```{r}
+nAuto_lda <- lda(mpg01 ~ cylinders + displacement + horsepower + weight, 
+                 data = nAuto_train)
+nAuto_lda
+```
+
+```{r}
+nAuto_lda_train_pred <- predict(nAuto_lda, nAuto_train)$class
+nAuto_lda_test_pred <- predict(nAuto_lda, nAuto_test)$class
+```
+
+```{r}
+train_err_lda <- mean(nAuto_lda_train_pred != nAuto_train$mpg01)
+train_err_lda
+```
+
+```{r}
+test_err_lda <- mean(nAuto_lda_test_pred != nAuto_test$mpg01)
+test_err_lda
+```
+
+```{r}
+plot(nAuto_test$displacement, nAuto_test$weight,
+     col = c("red", "blue")[nAuto_test$mpg01],
+     xlab = "displacement", ylab = "weight",
+     main = "True class vs Predicted class by LDA")
+
+points(nAuto_test$displacement, nAuto_test$weight,
+       pch = c(2, 3)[nAuto_lda_train_pred])
+
+legend("bottomright", c("true_0","true_1", "pred_0", "pred_1"),
+       col = c("red", "blue", "black", "black"),
+       pch = c(1, 1, 2, 3))
+```
+
+(e)
+```{r}
+nAuto_qda <- qda(mpg01 ~ cylinders + displacement + horsepower + weight, 
+                 data = nAuto_train)
+nAuto_qda
+```
+
+```{r}
+nAuto_qda_train_pred <- predict(nAuto_qda, nAuto_train)$class
+nAuto_qda_test_pred <- predict(nAuto_qda, nAuto_test)$class
+```
+
+```{r}
+train_err_qda <- mean(nAuto_qda_train_pred != nAuto_train$mpg01)
+train_err_qda
+```
+
+```{r}
+test_err_qda <- mean(nAuto_qda_test_pred != nAuto_test$mpg01)
+test_err_qda
+```
+
+```{r}
+plot(nAuto_test$displacement, nAuto_test$weight,
+     col = c("red", "blue")[nAuto_test$mpg01],
+     xlab = "displacement", ylab = "weight",
+     main = "True class vs Predicted class by QDA")
+
+points(nAuto_test$displacement, nAuto_test$weight,
+       pch = c(2, 3)[nAuto_qda_train_pred])
+
+legend("bottomright", c("true_0","true_1", "pred_0", "pred_1"),
+       col = c("red", "blue", "black", "black"),
+       pch = c(1, 1, 2, 3))
+```
+
+(f) Since test error of QDA is smaller, QDA perform better. Therefore, class-specific covariances among groups are more likely to be different. 
+
+(g)
+```{r}
+nAuto_lgr <- glm(mpg01 ~ cylinders + displacement + horsepower + weight, 
+                 data = nAuto_train, family = "binomial")
+summary(nAuto_lgr)
+```
+
+Intercept and horsepower are significant under $\alpha = 0.001$. Displacement and weight are not significant, even under $\alpha = 0.1$. 
+
+(h)
+```{r}
+lgr.probs_train <- predict(nAuto_lgr, type = "response")
+lgr.pred_train <- rep(0, length(lgr.probs_train))
+lgr.pred_train[lgr.probs_train > 0.5] = 1
+
+train_err_lgr <- mean(lgr.pred_train != nAuto_train$mpg01)
+train_err_lgr
+```
+
+```{r}
+lgr.probs_test <- predict(nAuto_lgr, nAuto_test, type = "response")
+lgr.pred_test <- rep(0, length(lgr.probs_test))
+lgr.pred_test[lgr.probs_test > 0.5] = 1
+
+test_err_lgr <- mean(lgr.pred_test != nAuto_test$mpg01)
+test_err_lgr
+```
+
+```{r}
+plot(nAuto_test$displacement, nAuto_test$weight,
+     col = c("red", "blue")[nAuto_test$mpg01],
+     xlab = "displacement", ylab = "weight",
+     main = "True class vs Predicted class by Logistic Regression")
+
+points(nAuto_test$displacement, nAuto_test$weight,
+       pch = c(2, 3)[lgr.pred_train])
+
+legend("bottomright", c("true_0","true_1", "pred_0", "pred_1"),
+       col = c("red", "blue", "black", "black"),
+       pch = c(1, 1, 2, 3))
+```
+
+(i)
+```{r}
+medians <- data.frame(cylinders = median(nAuto_train$cylinders),
+                      displacement = median(nAuto_train$displacement),
+                      horsepower = median(nAuto_train$horsepower),
+                      weight = median(nAuto_train$weight))
+as.numeric(predict(nAuto_lgr, newdata = medians, type = "response"))
+```
+
+(j)
+```{r}
+mean_train <- colMeans(nAuto_train[c('cylinders', 'displacement','horsepower', 
+                                     'weight')])
+
+sd_train <- sqrt(diag(var(nAuto_train[c('cylinders', 'displacement',
+                                        'horsepower', 'weight')])))
+
+nAuto_train_Scaled <- scale(nAuto_train[c('cylinders', 'displacement',
+                                          'horsepower', 'weight')],
+                            center = mean_train,
+                            scale = sd_train)
+
+nAuto_test_Scaled <- scale(nAuto_test[c('cylinders', 'displacement',
+                                        'horsepower', 'weight')],
+                           center = mean_train,
+                           scale = sd_train)
+
+Ks <- seq(1, 101, by = 5)
+
+trainErrors <- c()
+testErrors <- c()
+  
+for (K in Ks) {
+  knnClassTrain <- knn(train = nAuto_train_Scaled, cl = nAuto_train$mpg01, 
+                       test = nAuto_train_Scaled, k = K)
+  knnClassTest <- knn(train = nAuto_train_Scaled, cl = nAuto_train$mpg01, 
+                      test = nAuto_test_Scaled, k = K)
+  
+  trainError <- mean(knnClassTrain != nAuto_train$mpg01)
+  trainErrors <- c(trainErrors, trainError)
+  
+  testError <- mean(knnClassTest != nAuto_test$mpg01)
+  testErrors <- c(testErrors, testError)
+}
+```
+
+```{r}
+plot(Ks, trainErrors, type = "b", lwd = 2, col = "blue", xlab = "K", 
+     ylab = "Error", ylim = c(0, 0.25))
+lines(Ks, testErrors, type = "b", lwd = 2, col = "red")
+
+legend("bottomright", legend = c("Training Error", "Test Error"), 
+       col = c("blue", "red"), lwd = c(2, 2))
+```
+
+```{r}
+K_train <- Ks[which.min(trainErrors)]
+K_train
+```
+
+```{r}
+K_test <- Ks[which.min(testErrors)]
+K_test
+```
+
+(k) I choose $K = 16$ since the test error is the smallest. 
+
+```{r}
+knnClassTrain_16 <- knn(train = nAuto_train_Scaled, cl = nAuto_train$mpg01,
+                        test = nAuto_train_Scaled, k = K_test)
+trainError_16 <- mean(knnClassTrain_16 != nAuto_train$mpg01)
+trainError_16
+```
+
+```{r}
+knnClassTest_16 <- knn(train = nAuto_train_Scaled, cl = nAuto_train$mpg01,
+                       test = nAuto_test_Scaled, k = K_test)
+testError_16 <- mean(knnClassTest_16 != nAuto_test$mpg01)
+testError_16
+```
+
+```{r}
+plot(nAuto_test$displacement, nAuto_test$weight,
+     col = c("red", "blue")[nAuto_test$mpg01],
+     xlab = "displacement", ylab = "weight",
+     main = "True class vs Predicted class by KNN")
+
+points(nAuto_test$displacement, nAuto_test$weight,
+       pch = c(2, 3)[knnClassTrain_16])
+
+legend("bottomright", c("true_0","true_1", "pred_0", "pred_1"),
+       col = c("red", "blue", "black", "black"),
+       pch = c(1, 1, 2, 3))
+```
+
+(l) No. The KNN algorithm doesn't seems to give the probability of a certain event. Instead, it gives a prediction value of response based on the values of k-nearest neighbors. 
+
+(m)
+```{r}
+tab <- matrix(c(train_err_lda, train_err_qda, train_err_lgr, trainError_16,
+                test_err_lda, test_err_qda, test_err_lgr, testError_16), 
+              ncol = 2)
+rownames(tab) <- c("LDA", "QDA", "Log Reg", "KNN")
+colnames(tab) <- c("Train Err", "Test Err")
+tab <- as.table(tab)
+tab
+```
+Test error: KNN < Logistic Regression < LDA < QDA. KNN performs the best on this data set. 
+
+Since QDA performs better than LDA, the covariances between two classes are more likely to be different. Since logistic regression and KNN perform better than LDA and QDA, the distribution of data is less likely to be Gaussian. 
+
+Since the K value of KNN is not large, the boundary is less likely to be linear. Since QDA performs worse than KNN, there is no evidence to show the boundary is quadratic. 
